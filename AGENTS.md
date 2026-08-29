@@ -111,3 +111,17 @@ src/
 3. Check `docs/knowledge/domain_facts.md` for gotchas
 4. Check `docs/knowledge/corrections.md` for past mistakes to avoid
 5. Check `docs/ref/` HTML files for architectural context
+
+## Vision Toolkit (agent-vision-toolkit)
+
+For screenshot analysis and image understanding, this repo includes the [agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit).
+
+### Quick Setup
+Follow `tools/agent-vision-toolkit/AGENT_INSTALL.md` for full installation. The key pieces:
+- `glance` — image Q&A (describe what's in a screenshot with task context)
+- `ground` — locate UI elements by coordinates
+- `detect` — inventory elements in a screenshot
+- `ocr` via glance — extract text from long screenshots
+
+### Screenshot Trigger ("sc")
+When user says `sc`, use glance to analyze the most recent screenshot. See `docs/skills/get-pic.md` for trigger rules and `tools/agent-vision-toolkit/skills/vision-skills/SKILL.md` for the vision skill workflow.
