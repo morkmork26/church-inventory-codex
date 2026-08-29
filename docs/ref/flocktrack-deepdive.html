@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="FlockTrack PWA Technical Deep-Dive - Interview Prep Study Notes">
+<meta name="author" content="FlockTrack Developer">
+<meta name="theme-color" content="#0f172a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>FlockTrack - Technical Deep-Dive</title>
+<style>
+:root {
+  --navy: #0f1b2d; --dark-blue: #1a2942; --teal: #00b4d8; --teal-light: #48cae4;
+  --teal-dark: #0077b6; --gold: #f4a261; --coral: #e76f51; --mint: #2dd4bf;
+  --purple: #8b5cf6; --pink: #ec4899; --slate: #64748b;
+  --radius: 12px; --radius-lg: 16px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --bg: #f8fafc; --bg-secondary: #f1f5f9; --card-bg: #ffffff;
+  --text: #1e293b; --text-light: #475569; --text-muted: #94a3b8; --border: #e2e8f0;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  --glass-bg: rgba(255,255,255,0.7); --glass-border: rgba(255,255,255,0.5);
+}
+[data-theme="dark"] {
+  --bg: #0f172a; --bg-secondary: #1e293b; --card-bg: #1e293b;
+  --text: #e2e8f0; --text-light: #94a3b8; --text-muted: #64748b; --border: #334155;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.3);
+  --glass-bg: rgba(30,41,59,0.7); --glass-border: rgba(71,85,105,0.5);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; transition: background var(--transition), color var(--transition); }
+a { color: var(--teal); text-decoration: none; }
+
+/* Theme Toggle */
+.theme-toggle { position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.3rem; box-shadow: var(--shadow); transition: transform var(--transition); }
+.theme-toggle:hover { transform: scale(1.1); }
+
+/* Hamburger */
+.hamburger { position: fixed; top: 1rem; left: 1rem; z-index: 1001; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(12px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; box-shadow: var(--shadow); }
+.hamburger span { width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: var(--transition); }
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+/* Sidebar */
+.sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); z-index: 1000; overflow-y: auto; transition: left var(--transition); padding: 5rem 1.5rem 2rem; }
+.sidebar.open { left: 0; }
+.sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; opacity: 0; pointer-events: none; transition: opacity var(--transition); }
+.sidebar-overlay.active { opacity: 1; pointer-events: all; }
+.sidebar a { display: block; padding: 0.6rem 1rem; margin: 0.2rem 0; border-radius: var(--radius); color: var(--text-light); font-size: 0.9rem; transition: var(--transition); }
+.sidebar a:hover, .sidebar a.active { background: var(--bg-secondary); color: var(--teal); }
+
+/* Cover */
+.cover { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; text-align: center; padding: 2rem; }
+.cover-bg { position: absolute; inset: 0; background: linear-gradient(135deg, var(--navy) 0%, var(--dark-blue) 50%, #0d2847 100%); }
+.orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: orbFloat 8s ease-in-out infinite; }
+.orb-1 { width: 400px; height: 400px; background: var(--teal); top: -100px; left: -100px; }
+.orb-2 { width: 350px; height: 350px; background: var(--purple); bottom: -80px; right: -80px; animation-delay: -3s; }
+.orb-3 { width: 250px; height: 250px; background: var(--gold); top: 50%; left: 60%; animation-delay: -5s; }
+@keyframes orbFloat { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(30px,-20px) scale(1.1); } }
+.cover-content { position: relative; z-index: 1; }
+.cover h1 { font-size: clamp(3rem,8vw,5rem); font-weight: 800; color: #fff; letter-spacing: -2px; margin-bottom: 0.5rem; }
+.cover h1 span { background: linear-gradient(135deg, var(--teal-light), var(--mint)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.cover .subtitle { font-size: 1.4rem; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; }
+.cover .subtext { font-size: 1rem; color: rgba(255,255,255,0.5); max-width: 500px; }
+
+/* Main Content */
+.main { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+section { margin-bottom: 3rem; opacity: 1; transform: translateY(0); transition: opacity 0.6s ease, transform 0.6s ease; }
+section.visible { opacity: 1; transform: translateY(0); }
+h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); position: relative; padding-left: 1rem; border-left: 4px solid var(--teal); }
+h3 { font-size: 1.3rem; font-weight: 600; margin: 1.5rem 0 0.8rem; color: var(--text); }
+p { margin-bottom: 1rem; color: var(--text-light); }
+
+/* Cards */
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin: 1rem 0; box-shadow: var(--shadow); transition: var(--transition); }
+.card:hover { box-shadow: var(--shadow-lg); }
+
+/* Special Boxes */
+.summary-box { background: linear-gradient(135deg, rgba(0,180,216,0.08), rgba(139,92,246,0.08)); border: 1px solid var(--teal-dark); border-radius: var(--radius-lg); padding: 1.5rem; margin: 1.5rem 0; }
+.summary-box::before { content: '📌 80/20 Summary'; display: block; font-weight: 700; color: var(--teal); margin-bottom: 0.8rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.analogy-box { background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.08)); border: 1px solid var(--purple); border-radius: var(--radius-lg); padding: 1.5rem; margin: 1.5rem 0; }
+.analogy-box::before { content: '💡 Analogy'; display: block; font-weight: 700; color: var(--purple); margin-bottom: 0.8rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.interview-box { border-left: 4px solid var(--gold); background: rgba(244,162,97,0.06); border-radius: 0 var(--radius) var(--radius) 0; padding: 1.5rem; margin: 1.5rem 0; }
+.interview-box::before { content: '🎯 Interview Answer'; display: block; font-weight: 700; color: var(--gold); margin-bottom: 0.8rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.misconception-box { background: rgba(231,111,81,0.06); border: 1px solid var(--coral); border-radius: var(--radius-lg); padding: 1.5rem; margin: 1.5rem 0; }
+.misconception-box::before { content: '⚠️ Misconception Guard'; display: block; font-weight: 700; color: var(--coral); margin-bottom: 0.8rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.example-box { background: rgba(45,212,191,0.06); border: 1px solid var(--mint); border-radius: var(--radius-lg); padding: 1.5rem; margin: 1.5rem 0; }
+.example-box::before { content: '📝 From Your Codebase'; display: block; font-weight: 700; color: var(--mint); margin-bottom: 0.8rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Concept Grid */
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 1rem; margin: 1.5rem 0; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; transition: var(--transition); }
+.concept-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.concept-card h4 { color: var(--teal); margin-bottom: 0.5rem; font-size: 1rem; }
+.concept-card p { font-size: 0.9rem; margin: 0; }
+
+/* Code Blocks */
+.code-block { position: relative; background: #0d1117; border-radius: var(--radius); margin: 1rem 0; overflow: hidden; }
+.code-block pre { padding: 1.5rem; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e6edf3; }
+.code-block .copy-btn { position: absolute; top: 0.8rem; right: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #e6edf3; padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: var(--transition); }
+.code-block .copy-btn:hover { background: rgba(255,255,255,0.2); }
+.code-block .lang-tag { position: absolute; top: 0.8rem; left: 1rem; font-size: 0.7rem; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; }
+
+/* Collapsible */
+.collapsible { margin: 1rem 0; }
+.collapsible-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: var(--transition); }
+.collapsible-header:hover { background: var(--bg-secondary); }
+.collapsible-header h4 { font-size: 1rem; color: var(--text); }
+.collapsible-header .chevron { transition: transform var(--transition); font-size: 1.2rem; color: var(--text-muted); }
+.collapsible-header.active .chevron { transform: rotate(180deg); }
+.collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+.collapsible-content-inner { padding: 1.5rem; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--card-bg); }
+
+/* Bottom Nav */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--glass-bg); backdrop-filter: blur(12px); border-top: 1px solid var(--glass-border); padding: 0.8rem 1.5rem; display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+.bottom-nav button { padding: 0.5rem 1.2rem; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card-bg); color: var(--text); cursor: pointer; font-size: 0.85rem; transition: var(--transition); }
+.bottom-nav button:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+.bottom-nav .section-indicator { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Progress */
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--teal), var(--purple)); z-index: 2000; transition: width 0.2s; }
+
+/* SVG Diagram */
+.diagram-container { margin: 2rem 0; overflow-x: auto; }
+.diagram-container svg { width: 100%; max-width: 800px; margin: 0 auto; display: block; }
+
+/* Lists */
+ul, ol { color: var(--text-light); }
+li { margin-bottom: 0.3rem; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--slate); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+
+/* Selection */
+::selection { background: var(--teal); color: #fff; }
+
+/* Focus */
+a:focus, button:focus { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+/* Print */
+@media print {
+  .theme-toggle, .hamburger, .sidebar, .sidebar-overlay, .bottom-nav, .progress-bar { display: none !important; }
+  section { opacity: 1 !important; transform: none !important; }
+  .collapsible-content { max-height: none !important; }
+  body { background: #fff; color: #000; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cover h1 { font-size: 2.5rem; }
+  h2 { font-size: 1.4rem; }
+  .concept-grid { grid-template-columns: 1fr; }
+  .bottom-nav { padding: 0.6rem 1rem; }
+  .code-block pre { font-size: 0.75rem; padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+
+<div class="hamburger" id="hamburger">
+  <span></span><span></span><span></span>
+</div>
+
+
+<nav class="sidebar" id="sidebar">
+  <a href="#overview">App Overview</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#frontend">Frontend (Vanilla JS)</a>
+  <a href="#pwa">PWA Deep-Dive</a>
+  <a href="#offline">Offline-First</a>
+  <a href="#backend">Google Apps Script</a>
+  <a href="#database">Google Sheets as DB</a>
+  <a href="#qr">QR Code System</a>
+  <a href="#device-access">Device Access Control</a>
+  <a href="#challenges">Real-World Challenges</a>
+  <a href="#fire-and-forget">Fire-and-Forget</a>
+  <a href="#event-driven">Event-Driven</a>
+  <a href="#registration-flow">Registration Flow</a>
+  <a href="#sync-deep-dive">Sync Deep-Dive</a>
+  <a href="#error-handling">Error Handling</a>
+  <a href="#performance">Performance</a>
+  <a href="#gas-limitations">Apps Script Quirks</a>
+  <a href="#concepts">Key Concepts</a>
+  <a href="#interview">Interview Prep</a>
+  <a href="#deployment">Deployment</a>
+  <a href="#security-model">Security Model</a>
+  <a href="#future">Future Roadmap</a>
+</nav>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-bg">
+    
+    
+    
+  </div>
+  <div class="cover-content">
+    <h1>Flock<span>Track</span></h1>
+    <p class="subtitle">Technical Deep-Dive</p>
+    <p class="subtext">Understanding Every Layer of Your Church Attendance PWA</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- SECTION: OVERVIEW -->
+<section id="overview">
+<h2>App Overview</h2>
+
+<div class="summary-box">
+<p>FlockTrack is a Progressive Web App that tracks church attendance for 500+ members. It works offline, costs zero dollars to run, and supports QR scanning, photo-grid quick tap, and search-based check-in. The entire backend is Google Sheets + Google Apps Script, hosted free on GitHub Pages.</p>
+</div>
+
+<div class="concept-grid">
+  <div class="concept-card"><h4>PWA</h4><p>Installable web app. No app store needed. Works on any device with a browser.</p></div>
+  <div class="concept-card"><h4>Offline-First</h4><p>Check-ins save locally first, sync to cloud later. Works without internet.</p></div>
+  <div class="concept-card"><h4>Zero Cost</h4><p>GitHub Pages (free hosting) + Google Sheets (free database) + Apps Script (free API).</p></div>
+  <div class="concept-card"><h4>500+ Members</h4><p>Handles a real congregation with photos, QR codes, and attendance history.</p></div>
+</div>
+
+<h3>Check-in Methods</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>📷 QR Scan</h4><p>Member shows their QR code. Camera reads it, extracts member ID, marks attendance instantly.</p></div>
+  <div class="concept-card"><h4>👆 Quick Tap</h4><p>Photo grid of all members. Tap a face to check in. Fastest method for greeters who know everyone.</p></div>
+  <div class="concept-card"><h4>🔍 Search</h4><p>Type a name, select from results. Fallback for visitors or new members without QR codes.</p></div>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Tell me about a project you built."</strong></p>
+<p>I built FlockTrack, a Progressive Web App for my church that tracks attendance for over 500 members. It runs at zero cost using GitHub Pages for hosting, Google Sheets as the database, and Google Apps Script as the API layer. It works fully offline; check-ins save to the device's IndexedDB first and sync to the server in the background. It supports three check-in methods: QR code scanning via camera, a photo grid for quick taps, and name search. The entire frontend is a single vanilla JavaScript file with no build step, making it fast to load and easy to maintain.</p>
+</div>
+</section>
+<nav class="toc" id="toc"><h2>Table of Contents</h2><ul class="toc-list"></ul></nav>
+
+<!-- SECTION: ARCHITECTURE -->
+<section id="architecture">
+<h2>Architecture</h2>
+
+<div class="diagram-container">
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#00b4d8"/><stop offset="100%" style="stop-color:#48cae4"/></linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8b5cf6"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f4a261"/><stop offset="100%" style="stop-color:#fbbf24"/></linearGradient>
+    <linearGradient id="mintGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2dd4bf"/><stop offset="100%" style="stop-color:#5eead4"/></linearGradient>
+    <filter id="dropShadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.2"/></filter>
+  </defs>
+  <!-- User Devices -->
+  <rect x="40" y="60" width="160" height="80" rx="12" fill="url(#tealGrad)" filter="url(#dropShadow)"/>
+  <text x="120" y="95" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">User Devices</text>
+  <text x="120" y="118" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">(Any Browser / PWA)</text>
+  <!-- Arrow 1 -->
+  <path d="M200 100 L280 100" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="240" y="90" text-anchor="middle" fill="#94a3b8" font-size="9">HTTPS GET</text>
+  <!-- Service Worker -->
+  <rect x="40" y="180" width="160" height="60" rx="12" fill="url(#mintGrad)" filter="url(#dropShadow)"/>
+  <text x="120" y="210" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="600">Service Worker</text>
+  <text x="120" y="228" text-anchor="middle" fill="rgba(0,0,0,0.6)" font-size="9">Cache + Offline</text>
+  <!-- IndexedDB -->
+  <rect x="40" y="280" width="160" height="60" rx="12" fill="rgba(30,41,59,0.8)" stroke="#334155" stroke-width="1" filter="url(#dropShadow)"/>
+  <text x="120" y="310" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="600">IndexedDB</text>
+  <text x="120" y="328" text-anchor="middle" fill="#94a3b8" font-size="9">Local Queue + Cache</text>
+  <!-- Apps Script -->
+  <rect x="300" y="60" width="180" height="80" rx="12" fill="url(#purpleGrad)" filter="url(#dropShadow)"/>
+  <text x="390" y="95" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Google Apps Script</text>
+  <text x="390" y="118" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">doGet() Handler</text>
+  <!-- Arrow 2 -->
+  <path d="M480 100 L560 100" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="520" y="90" text-anchor="middle" fill="#94a3b8" font-size="9">Read/Write</text>
+  <!-- Google Sheets -->
+  <rect x="580" y="40" width="180" height="120" rx="12" fill="url(#goldGrad)" filter="url(#dropShadow)"/>
+  <text x="670" y="75" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Google Sheets</text>
+  <text x="670" y="98" text-anchor="middle" fill="rgba(0,0,0,0.6)" font-size="10">Members | Attendance</text>
+  <text x="670" y="116" text-anchor="middle" fill="rgba(0,0,0,0.6)" font-size="10">Visitors | Config</text>
+  <text x="670" y="134" text-anchor="middle" fill="rgba(0,0,0,0.6)" font-size="10">Devices</text>
+  <!-- Connections -->
+  <line x1="120" y1="140" x2="120" y2="180" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4"/>
+  <line x1="120" y1="240" x2="120" y2="280" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4"/>
+  <!-- GitHub Pages -->
+  <rect x="300" y="280" width="180" height="60" rx="12" fill="rgba(30,41,59,0.8)" stroke="#334155" stroke-width="1" filter="url(#dropShadow)"/>
+  <text x="390" y="310" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="600">GitHub Pages</text>
+  <text x="390" y="328" text-anchor="middle" fill="#94a3b8" font-size="9">Static Hosting (Free)</text>
+  <path d="M200 180 L300 310" stroke="#64748b" stroke-width="1" stroke-dasharray="4"/>
+  <!-- Arrow marker -->
+  <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
+</svg>
+</div>
+
+<div class="summary-box">
+<p><strong>Data flow:</strong> User taps "Check In" on their phone. The app saves to IndexedDB instantly (offline-safe). In the background, it sends an HTTPS GET request to Google Apps Script with JSON-encoded data. Apps Script parses the request, writes to the appropriate Google Sheet tab, and returns a success response. If the network call fails, the entry stays in IndexedDB's sync queue and retries later.</p>
+</div>
+
+<div class="analogy-box">
+<p><strong>Think of it like a post office:</strong> IndexedDB is your outbox on your desk. You drop letters there instantly. The Service Worker is the mail carrier who periodically picks them up and delivers them to the post office (Google Apps Script). The post office files them in the correct drawer (Google Sheets tab). If the mail carrier can't make it today (no internet), your letters stay in the outbox and get delivered tomorrow.</p>
+</div>
+</section>
+
+<!-- SECTION: FRONTEND -->
+<section id="frontend">
+<h2>Frontend: Vanilla JavaScript</h2>
+
+<h3>Why No Framework?</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>Zero Build Step</h4><p>No webpack, no npm install, no transpilation. Edit a file, push to GitHub, it's live. React/Vue require a build pipeline.</p></div>
+  <div class="concept-card"><h4>Fast Load</h4><p>Single HTML file (~2000 lines). No framework bundle to download. First paint under 1 second on 3G.</p></div>
+  <div class="concept-card"><h4>Works Offline Easily</h4><p>One file to cache. With React, you'd need to cache the entire chunk-split bundle. Vanilla = simple cache manifest.</p></div>
+  <div class="concept-card"><h4>No Abstraction Debt</h4><p>When something breaks, you debug YOUR code, not React internals or state management libraries.</p></div>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Why didn't you use React or Vue?"</strong></p>
+<p>For this app, a framework would add complexity without proportional benefit. The UI is relatively simple (a few views, no deeply nested state), and I needed it to be maximally cacheable for offline use. A single HTML file with vanilla JS means zero build step, instant deployment to GitHub Pages, and the Service Worker only needs to cache one file. The trade-off is manual DOM manipulation, but with 500 lines of UI code, that's manageable.</p>
+</div>
+
+<div class="example-box">
+<p><strong>CSS Custom Properties for Theming:</strong></p>
+</div>
+<div class="code-block">
+<span class="lang-tag">CSS</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>:root {
+  --primary: #2196F3;
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --text: #ffffff;
+  --text-secondary: rgba(255,255,255,0.7);
+}
+[data-theme="light"] {
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --text: #212121;
+  --text-secondary: rgba(0,0,0,0.6);
+}
+/* One variable change repaints the entire app */</pre>
+</div>
+
+<div class="example-box">
+<p><strong>Touch-Optimized Photo Grid (Quick Tap):</strong></p>
+</div>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>function renderMemberGrid(members) {
+  const grid = document.getElementById('memberGrid');
+  grid.innerHTML = members.map(m => `
+    &lt;div class="member-card" onclick="checkIn('${m.id}')"
+         style="touch-action: manipulation;"&gt;
+      &lt;img src="${m.photo}" loading="lazy" alt="${m.name}"&gt;
+      &lt;span&gt;${m.name}&lt;/span&gt;
+    &lt;/div&gt;
+  `).join('');
+}
+// touch-action: manipulation removes 300ms tap delay on mobile</pre>
+</div>
+
+<div class="misconception-box">
+<p><strong>"Vanilla JS means bad code."</strong> No. Vanilla JS means you own every line. Frameworks are tools, not quality guarantees. FlockTrack is well-structured with clear function separation, event delegation, and modular data flow. The absence of React doesn't mean absence of architecture.</p>
+</div>
+</section>
+
+<!-- SECTION: PWA -->
+<section id="pwa">
+<h2>PWA Deep-Dive</h2>
+
+<h3>What IS a PWA?</h3>
+<p>A Progressive Web App is a regular website that meets specific criteria to behave like a native app. When those criteria are met, the browser offers "Add to Home Screen." After installation, it launches without the browser address bar, has its own app icon, and works offline.</p>
+
+<div class="summary-box">
+<p>A PWA needs three things: (1) HTTPS, (2) a Web App Manifest (manifest.json), and (3) a Service Worker. GitHub Pages gives you HTTPS for free. The manifest tells the phone how to display the app. The Service Worker intercepts network requests and enables offline mode.</p>
+</div>
+
+<h3>manifest.json</h3>
+<p>This JSON file tells the browser: "This website is an app. Here's how to install it."</p>
+
+<div class="code-block">
+<span class="lang-tag">JSON</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>{
+  "name": "FlockTrack - Church Attendance",
+  "short_name": "FlockTrack",
+  "description": "Church attendance tracking PWA",
+  "start_url": "/FlockTrack/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#2196F3",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}</pre>
+</div>
+
+<div class="concept-grid">
+  <div class="concept-card"><h4>display: "standalone"</h4><p>Hides the browser URL bar. App looks native. Other options: fullscreen, minimal-ui, browser.</p></div>
+  <div class="concept-card"><h4>start_url</h4><p>Where the app opens when launched from home screen. Your entry point.</p></div>
+  <div class="concept-card"><h4>theme_color</h4><p>Colors the phone's status bar and task switcher to match your app brand.</p></div>
+  <div class="concept-card"><h4>icons</h4><p>The app icon on the home screen. Need multiple sizes for different devices.</p></div>
+</div>
+
+<h3>Service Worker (sw.js)</h3>
+<p>A Service Worker is a JavaScript file that the browser runs in a separate thread. It sits between your app and the network, intercepting every HTTP request. Think of it as a programmable proxy.</p>
+
+<div class="analogy-box">
+<p><strong>Service Worker = Bouncer at a club.</strong> Every request that leaves your app has to pass through the bouncer. The bouncer checks: "Do I have this in my cache (VIP list)?" If yes, serve it immediately without bothering the server. If no, let the request through to the network. If the network is down, serve a cached fallback or tell the user they're offline.</p>
+</div>
+
+<div class="example-box">
+<p><strong>FlockTrack's actual sw.js:</strong></p>
+</div>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>const CACHE_NAME = 'flocktrack-v2';
+const ASSETS = [
+  '/FlockTrack/',
+  '/FlockTrack/index.html',
+  '/FlockTrack/icons/logo.png',
+  '/FlockTrack/icons/icon-192.png',
+  '/FlockTrack/icons/icon-512.png',
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'
+];
+
+// Install: cache all critical assets
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+// Activate: delete old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch: cache-first for assets, network-only for API
+self.addEventListener('fetch', event => {
+  if (event.request.url.includes('script.google.com')) {
+    return; // API calls go straight to network, never cached
+  }
+  event.respondWith(
+    caches.match(event.request)
+      .then(cached => cached || fetch(event.request))
+  );
+});</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Explain the Service Worker lifecycle."</strong></p>
+<p>A Service Worker goes through three phases: Install, Activate, and Fetch. During Install, it downloads and caches all critical assets. During Activate, it cleans up old caches from previous versions. After activation, it intercepts all network requests in the Fetch event. In FlockTrack, I use a cache-first strategy for static assets (serve from cache, fall back to network) and network-only for API calls to Google Apps Script (because attendance data must always be fresh).</p>
+</div>
+
+<h3>Cache Strategy</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>Cache-First (Assets)</h4><p>Check cache. If found, serve it. If not, fetch from network and cache the response. Used for HTML, icons, JS libraries.</p></div>
+  <div class="concept-card"><h4>Network-Only (API)</h4><p>Always go to network. Never cache API responses. Attendance data must be fresh. If network fails, IndexedDB handles it.</p></div>
+</div>
+</section>
+
+<!-- SECTION: OFFLINE -->
+<section id="offline">
+<h2>Offline-First Architecture</h2>
+
+<h3>IndexedDB</h3>
+<p>IndexedDB is a browser-native database. Unlike localStorage (which only stores strings up to 5MB), IndexedDB stores structured objects, supports indexes for fast queries, and can hold hundreds of megabytes. It's asynchronous, so it never blocks the UI.</p>
+
+<div class="analogy-box">
+<p><strong>IndexedDB = Your personal notebook.</strong> When you check someone in, you write it in your notebook immediately (instant). Later, when you have WiFi, you transcribe your notebook entries to the shared whiteboard (Google Sheets). Your notebook never runs out of pages and organizes entries by date automatically.</p>
+</div>
+
+<div class="example-box">
+<p><strong>How FlockTrack uses IndexedDB:</strong></p>
+</div>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Open/create the database
+const dbRequest = indexedDB.open('FlockTrackDB', 1);
+
+dbRequest.onupgradeneeded = (event) => {
+  const db = event.target.result;
+  // Store for today's attendance (local cache)
+  db.createObjectStore('attendance', { keyPath: 'memberId' });
+  // Store for pending sync items (outbox)
+  db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
+  // Store for member data (offline access)
+  db.createObjectStore('members', { keyPath: 'id' });
+};
+
+// Check-in: save locally FIRST, then sync
+async function checkIn(memberId) {
+  const record = { memberId, timestamp: Date.now(), synced: false };
+
+  // 1. Save to IndexedDB immediately (user sees success)
+  await saveToIndexedDB('attendance', record);
+  showSuccessUI(memberId);
+
+  // 2. Try to sync to server in background
+  try {
+    await syncToServer(record);
+    record.synced = true;
+    await saveToIndexedDB('attendance', record);
+  } catch (e) {
+    // Network failed. Record stays in syncQueue.
+    await addToSyncQueue(record);
+  }
+}</pre>
+</div>
+
+<div class="summary-box">
+<p><strong>The offline-first pattern:</strong> (1) Write to IndexedDB. (2) Update UI immediately. (3) Try network in background. (4) If network fails, queue for retry. (5) On next sync cycle, flush the queue. The user NEVER waits for network. The server is authoritative; each sync cycle refreshes local data from the server's truth.</p>
+</div>
+
+<h3>Sync Queue &amp; Retry Logic</h3>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Periodic sync: runs every 30 seconds when online
+async function syncCycle() {
+  if (!navigator.onLine) return;
+
+  // 1. Flush outgoing queue
+  const pending = await getAllFromStore('syncQueue');
+  for (const item of pending) {
+    try {
+      await syncToServer(item);
+      await deleteFromStore('syncQueue', item.id);
+    } catch (e) {
+      break; // Stop on first failure, retry next cycle
+    }
+  }
+
+  // 2. Pull fresh data from server (server is authoritative)
+  const serverData = await fetchTodayAttendance();
+  await clearStore('attendance');
+  for (const record of serverData) {
+    await saveToIndexedDB('attendance', record);
+  }
+  updateUI();
+}</pre>
+</div>
+
+<div class="misconception-box">
+<p><strong>"Offline-first means the local data is the source of truth."</strong> No. In FlockTrack, the SERVER (Google Sheets) is authoritative. Local IndexedDB is a cache and an outbox. Each sync cycle clears local attendance and replaces it with server data. This prevents conflicts; if two devices check in the same person, the server deduplicates.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you handle conflicts in offline-first?"</strong></p>
+<p>FlockTrack uses a "last-write-wins with server authority" model. Local writes are fire-and-forget; they queue up and push to the server. The server deduplicates by member ID + date. On each sync cycle, local attendance is fully replaced by server data. This means if two devices check in the same person, both pushes arrive at the server, the server only keeps one record (deduplicated), and both devices converge on the same state at next sync. No complex CRDT or vector clocks needed for this use case.</p>
+</div>
+</section>
+
+<!-- SECTION: BACKEND -->
+<section id="backend">
+<h2>Backend: Google Apps Script</h2>
+
+<h3>What is Google Apps Script?</h3>
+<p>Google Apps Script (GAS) is a serverless JavaScript runtime hosted by Google. It can access Google Sheets, Gmail, Drive, and Calendar natively. You write JavaScript, deploy it as a "Web App," and get a URL. That URL is your API endpoint. No server to manage, no hosting costs, no infrastructure.</p>
+
+<div class="analogy-box">
+<p><strong>Google Apps Script = A secretary who lives inside Google's office.</strong> You send them a letter (HTTP request) with instructions. They read it, pull the right file from the cabinet (Sheets), update it, and send you a confirmation. They never sleep, never take vacation, and work for free (up to quotas).</p>
+</div>
+
+<h3>The doGet Handler</h3>
+<p>Every request hits one function: <code>doGet(e)</code>. The parameter <code>e</code> contains query string parameters. FlockTrack encodes the entire action + payload as JSON in a single <code>data</code> parameter.</p>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>function doGet(e) {
+  try {
+    const payload = JSON.parse(e.parameter.data);
+    const action = payload.action;
+
+    switch (action) {
+      case 'checkIn':
+        return handleCheckIn(payload);
+      case 'getMembers':
+        return handleGetMembers(payload);
+      case 'addMember':
+        return handleAddMember(payload);
+      case 'updateMember':
+        return handleUpdateMember(payload);
+      case 'addVisitor':
+        return handleAddVisitor(payload);
+      case 'bulkSync':
+        return handleBulkSync(payload);
+      case 'resendQR':
+        return handleResendQR(payload);
+      case 'sendReport':
+        return handleSendReport(payload);
+      case 'getConfig':
+        return handleGetConfig();
+      case 'registerDevice':
+        return handleRegisterDevice(payload);
+      default:
+        return jsonResponse({ error: 'Unknown action' });
+    }
+  } catch (err) {
+    return jsonResponse({ error: err.message });
+  }
+}
+
+function jsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+</div>
+
+<h3>Why GET Instead of POST?</h3>
+
+<div class="misconception-box">
+<p><strong>"GET is only for reading data."</strong> In REST theory, yes. In practice, FlockTrack uses GET for writes because of a real iOS Safari bug: when Apps Script redirects (302) after receiving a POST, iOS Safari drops the request body. The data never arrives. Converting all writes to GET (with JSON in the query string) bypasses this entirely. It's pragmatic engineering over theoretical purity.</p>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Frontend: how a check-in request is sent
+async function syncToServer(record) {
+  const payload = {
+    action: 'checkIn',
+    memberId: record.memberId,
+    timestamp: record.timestamp,
+    deviceId: getDeviceFingerprint()
+  };
+
+  const url = SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+  const response = await fetch(url);
+  const result = await response.json();
+
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+// The entire payload rides in the URL query string as encoded JSON</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Why did you use GET for write operations? Isn't that wrong?"</strong></p>
+<p>Technically, REST conventions say GET should be idempotent and read-only. However, I hit a real bug: iOS Safari drops POST bodies when Google Apps Script issues its required 302 redirect after deployment. The workaround is encoding the write payload as JSON in the GET query string. This is a pragmatic decision; the API is not public-facing, and the trade-off between theoretical REST purity and actually working on all devices was clear. Many internal APIs make similar compromises.</p>
+</div>
+</section>
+
+<!-- SECTION: DATABASE -->
+<section id="database">
+<h2>Google Sheets as Database</h2>
+
+<h3>Tab = Table</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>Members</h4><p>ID, Name, Email, Phone, Photo URL, QR Code, Group, Status, Registration Date</p></div>
+  <div class="concept-card"><h4>Attendance</h4><p>Member ID, Date, Time, Device ID, Check-in Method (QR/Tap/Search)</p></div>
+  <div class="concept-card"><h4>Visitors</h4><p>Name, Contact, Date, Notes, Follow-up Status</p></div>
+  <div class="concept-card"><h4>Config</h4><p>App settings, service times, group definitions, admin emails</p></div>
+  <div class="concept-card"><h4>Devices</h4><p>Device fingerprint, Name, Approved status, Last seen</p></div>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Column index mapping (avoids magic numbers)
+const COL_MEM = { ID: 1, NAME: 2, EMAIL: 3, PHONE: 4, PHOTO: 5, QR: 6, GROUP: 7, STATUS: 8 };
+const COL_ATT = { MEMBER_ID: 1, DATE: 2, TIME: 3, DEVICE: 4, METHOD: 5 };
+
+function handleCheckIn(payload) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Attendance');
+  const today = Utilities.formatDate(new Date(), 'Asia/Manila', 'yyyy-MM-dd');
+  const time = Utilities.formatDate(new Date(), 'Asia/Manila', 'HH:mm:ss');
+
+  // Check for duplicate (same member, same day)
+  const data = sheet.getDataRange().getValues();
+  const alreadyCheckedIn = data.some(row =>
+    row[COL_ATT.MEMBER_ID - 1] === payload.memberId &&
+    row[COL_ATT.DATE - 1] === today
+  );
+
+  if (alreadyCheckedIn) {
+    return jsonResponse({ status: 'already_checked_in' });
+  }
+
+  sheet.appendRow([payload.memberId, today, time, payload.deviceId, payload.method]);
+  return jsonResponse({ status: 'success' });
+}</pre>
+</div>
+
+<h3>Limitations &amp; Why It Works Anyway</h3>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>Known Limitations of Google Sheets as DB</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<ul style="list-style:disc;padding-left:1.5rem;color:var(--text-light);">
+<li><strong>Speed:</strong> Gets slow past 10,000 rows. Each read loads the entire sheet into memory.</li>
+<li><strong>No real queries:</strong> No SQL, no indexes. You filter arrays in JavaScript.</li>
+<li><strong>Concurrency:</strong> No row-level locking. Two simultaneous writes to the same row can conflict.</li>
+<li><strong>Quotas:</strong> Google limits Apps Script to 90 minutes execution/day, 20,000 email sends/day.</li>
+<li><strong>No relations:</strong> Can't JOIN tabs. Cross-tab lookups are manual.</li>
+</ul>
+<p style="margin-top:1rem;color:var(--text-light);"><strong>Why it still works for FlockTrack:</strong> Attendance is append-only (500 new rows/week max). Reads are bulk fetches (load all today's attendance). We'll never hit 10k rows in the attendance tab if we archive monthly. Concurrency isn't an issue because check-ins are sequential (one person at a time). The free tier quotas are way beyond what a 500-member church needs.</p>
+</div>
+</div>
+</div>
+
+<div class="analogy-box">
+<p><strong>Google Sheets = A shared whiteboard.</strong> Everyone can see it, anyone (with permission) can write on it, but you can't sort it faster than reading every sticky note. It works great when the whiteboard is small (hundreds of rows) and people take turns writing. It breaks when thousands of people write simultaneously or the board fills a whole wall.</p>
+</div>
+</section>
+
+<!-- SECTION: QR -->
+<section id="qr">
+<h2>QR Code System</h2>
+
+<h3>How QR Registration Works</h3>
+<ol style="color:var(--text-light);padding-left:1.5rem;margin-bottom:1rem;">
+<li>Member fills out a Google Form (name, email, phone, photo)</li>
+<li>Google Form submission triggers an Apps Script <code>onFormSubmit</code> function</li>
+<li>Script generates a unique member ID, writes to Members sheet</li>
+<li>Script generates a QR code image (using Google Charts API)</li>
+<li>Script emails the QR code to the member with instructions</li>
+</ol>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Triggered automatically when Google Form is submitted
+function onFormSubmit(e) {
+  const responses = e.namedValues;
+  const memberId = Utilities.getUuid();
+  const name = responses['Full Name'][0];
+  const email = responses['Email'][0];
+
+  // Write to Members sheet
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Members');
+  sheet.appendRow([memberId, name, email, /* ... */]);
+
+  // Generate QR code (Google Charts API)
+  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${memberId}`;
+
+  // Email QR to member
+  GmailApp.sendEmail(email, 'Your FlockTrack QR Code', '',{
+    htmlBody: `&lt;h2&gt;Welcome, ${name}!&lt;/h2&gt;
+      &lt;p&gt;Show this QR code when you arrive at church:&lt;/p&gt;
+      &lt;img src="${qrUrl}" alt="Your QR Code"&gt;
+      &lt;p&gt;Save this image to your phone for easy access.&lt;/p&gt;`
+  });
+}</pre>
+</div>
+
+<h3>Scanning on the Frontend</h3>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Using html5-qrcode library
+const qrScanner = new Html5Qrcode("qr-reader");
+
+async function startScanning() {
+  await qrScanner.start(
+    { facingMode: "environment" }, // Rear camera
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onScanSuccess,
+    onScanFailure
+  );
+}
+
+function onScanSuccess(decodedText) {
+  // decodedText = the member UUID encoded in the QR
+  const memberId = decodedText;
+  checkIn(memberId);
+  // Haptic feedback
+  if (navigator.vibrate) navigator.vibrate(100);
+}
+
+// CRITICAL: Stop camera when leaving the scan view
+async function stopScanning() {
+  await qrScanner.stop();
+  // iOS requires explicit track cleanup
+  const stream = document.getElementById('qr-reader')
+    .querySelector('video')?.srcObject;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+}</pre>
+</div>
+</section>
+
+<!-- SECTION: DEVICE ACCESS -->
+<section id="device-access">
+<h2>Device Access Control</h2>
+
+<p>Not every phone should be able to mark attendance. FlockTrack requires device approval before check-ins work.</p>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Generate a unique device fingerprint on first visit
+function getDeviceFingerprint() {
+  let fp = localStorage.getItem('deviceFingerprint');
+  if (!fp) {
+    fp = crypto.randomUUID(); // Browser-native UUID generator
+    localStorage.setItem('deviceFingerprint', fp);
+  }
+  return fp;
+}
+
+// On app load: check if this device is approved
+async function checkDeviceApproval() {
+  const fp = getDeviceFingerprint();
+  const result = await apiCall({ action: 'checkDevice', deviceId: fp });
+
+  if (result.status === 'approved') {
+    showMainApp();
+  } else if (result.status === 'pending') {
+    showPendingScreen(); // "Waiting for admin approval"
+  } else {
+    showRegistrationScreen(); // "Register this device"
+  }
+}</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you handle security in this app?"</strong></p>
+<p>Security is layered. First, each device generates a unique fingerprint stored in localStorage. New devices must be admin-approved before they can check anyone in. Second, the Apps Script web app is deployed with "Anyone" access but validates the device fingerprint on every request. Third, the Google Sheet itself has restricted sharing. It's not bank-level security, but for a church attendance app, the threat model is "prevent unauthorized casual marking" not "defend against nation-state actors."</p>
+</div>
+</section>
+
+<!-- SECTION: CHALLENGES -->
+<section id="challenges">
+<h2>Real-World Challenges Solved</h2>
+
+<div class="summary-box">
+<p>This section is GOLD for interviews. It shows you've shipped a real product used by real people and solved real problems. Interviewers love hearing about bugs you debugged and trade-offs you navigated.</p>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>iOS Safari POST Body Bug</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Problem:</strong> Google Apps Script, when deployed as a web app, responds with a 302 redirect on POST requests. Most browsers follow the redirect and include the body. iOS Safari drops the POST body on redirect, so the server receives an empty request.</p>
+<p><strong>Discovery:</strong> Check-ins worked on Android and desktop but silently failed on iPhones. No error, just no data arriving at the server.</p>
+<p><strong>Solution:</strong> Converted ALL write operations from POST to GET, encoding the payload as JSON in the query string: <code>?data=encodeURIComponent(JSON.stringify(payload))</code></p>
+<p><strong>Trade-off:</strong> URLs get long. URL length limit is ~2048 chars in some browsers. Our payloads are small enough (member ID + timestamp), so this isn't a practical concern.</p>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>Camera Not Releasing on iOS Tab Switch</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Problem:</strong> On iOS, switching tabs or going to home screen while the camera is active causes the camera to stay "locked." When the user returns, the camera shows a black screen or the device overheats.</p>
+<p><strong>Solution:</strong> Explicitly stop all media tracks when the QR scanner view is deactivated:</p>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>document.addEventListener('visibilitychange', () => {
+  if (document.hidden && isScannerActive) {
+    qrScanner.stop();
+    const video = document.querySelector('#qr-reader video');
+    if (video?.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+    }
+  }
+});</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>Flip Camera Black Screen</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Problem:</strong> When user taps "flip camera" (front to rear or vice versa), the video element shows black.</p>
+<p><strong>Root cause:</strong> The html5-qrcode library needs to fully stop before restarting with a different camera. Starting a new stream without stopping the old one causes a resource conflict.</p>
+<p><strong>Solution:</strong> <code>await qrScanner.stop()</code> THEN start with new facingMode. The await is critical; without it, the stop hasn't completed before the new start fires.</p>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>Deleted Check-ins Reappearing (Ghost Syncs)</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Problem:</strong> Admin deletes a check-in from the server (mistaken check-in). But the device still has it in IndexedDB. Next sync cycle pushes it back to the server. The deletion "undoes" itself.</p>
+<p><strong>Solution:</strong> 60-second local blacklist. When a deletion comes from the server (sync shows a record disappeared), the member ID goes into a blacklist with a 60s TTL. During those 60 seconds, the sync queue won't re-push that member's check-in. After 60s, the local IndexedDB has been refreshed from server (which no longer has the record), so it stays deleted.</p>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>const deleteBlacklist = new Map(); // memberId -> expiry timestamp
+
+function blacklistMember(memberId) {
+  deleteBlacklist.set(memberId, Date.now() + 60000);
+}
+
+function isBlacklisted(memberId) {
+  const expiry = deleteBlacklist.get(memberId);
+  if (!expiry) return false;
+  if (Date.now() > expiry) { deleteBlacklist.delete(memberId); return false; }
+  return true;
+}</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>Duplicate Registrations (Name Matching)</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Problem:</strong> "Maria Santos" registers. Later "Maria C. Santos" registers again. Or "maria santos" (lowercase). Now you have duplicate members.</p>
+<p><strong>Solution:</strong> A <code>namesMatch()</code> function that normalizes and fuzzy-matches:</p>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>function namesMatch(name1, name2) {
+  const normalize = (n) => n.toLowerCase().trim()
+    .replace(/[^a-z\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ');     // Collapse spaces
+
+  const n1 = normalize(name1);
+  const n2 = normalize(name2);
+
+  if (n1 === n2) return true;
+
+  // Check if one is a subset of the other (handles middle initials)
+  const parts1 = n1.split(' ');
+  const parts2 = n2.split(' ');
+  const shorter = parts1.length < parts2.length ? parts1 : parts2;
+  const longer = parts1.length >= parts2.length ? parts1 : parts2;
+
+  return shorter.every(part => longer.some(p => p.startsWith(part) || part.startsWith(p)));
+}</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>Splash Screen Timing</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Problem:</strong> On fast connections, the splash screen flickers (appears for 50ms then disappears). Looks janky. On slow connections, user stares at a blank screen.</p>
+<p><strong>Solution:</strong> Enforce a minimum 1.5s display time using <code>Date.now()</code> comparison:</p>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>const splashStart = Date.now();
+
+async function initApp() {
+  await loadMemberData();
+  await checkDeviceApproval();
+
+  // Ensure splash shows for at least 1.5 seconds
+  const elapsed = Date.now() - splashStart;
+  const remaining = Math.max(0, 1500 - elapsed);
+  await new Promise(resolve => setTimeout(resolve, remaining));
+
+  hideSplash();
+  showMainApp();
+}</pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION: CONCEPTS -->
+<section id="concepts">
+<h2>Key Concepts Explained</h2>
+
+<div class="concept-grid">
+  <div class="concept-card">
+    <h4>REST API vs FlockTrack</h4>
+    <p>REST uses different HTTP methods (GET/POST/PUT/DELETE) for different operations. FlockTrack is "REST-ish": all GET, action specified in JSON body. It's a pragmatic RPC-over-HTTP pattern, not strict REST.</p>
+  </div>
+  <div class="concept-card">
+    <h4>IndexedDB vs localStorage</h4>
+    <p>localStorage: synchronous, 5MB, strings only. IndexedDB: async, hundreds of MB, stores objects with indexes. For an offline queue of structured records, IndexedDB is the only viable option.</p>
+  </div>
+  <div class="concept-card">
+    <h4>Cache API</h4>
+    <p>A browser API that stores HTTP request/response pairs. The Service Worker uses it to serve cached responses when offline. It's separate from the browser's default HTTP cache and fully programmable.</p>
+  </div>
+  <div class="concept-card">
+    <h4>Web App Manifest</h4>
+    <p>A JSON file (manifest.json) that tells the browser this site can be installed as an app. Defines the app name, icons, theme, and how it should launch (standalone vs in browser).</p>
+  </div>
+  <div class="concept-card">
+    <h4>Event-Driven Architecture</h4>
+    <p>The app doesn't poll continuously. It reacts: user taps (event), network comes back (event), sync timer fires (event), visibility changes (event). Each event triggers a specific handler.</p>
+  </div>
+  <div class="concept-card">
+    <h4>PWA vs Native App</h4>
+    <p>PWA: no app store, instant updates, cross-platform, limited hardware access. Native: app store distribution, full hardware APIs, larger install size. For attendance tracking, PWA is sufficient and eliminates the app store friction.</p>
+  </div>
+</div>
+
+<div class="misconception-box">
+<p><strong>"Google Sheets is a real database."</strong> No. It's a spreadsheet being used as a database. It has no ACID guarantees, no transactions, no query optimizer, no connection pooling. It works for FlockTrack because the access pattern is simple (append-only writes, full-table reads) and the scale is small (hundreds of rows, not millions). At 10x scale, you'd migrate to Firebase or Supabase.</p>
+</div>
+
+<div class="misconception-box">
+<p><strong>"GET requests can't send data."</strong> They can. Query parameters ARE data. The limitation is URL length (~2048 chars) and the convention that GET should be idempotent. FlockTrack violates the convention intentionally because of the iOS Safari bug, and the payloads are small enough to fit in URLs.</p>
+</div>
+</section>
+
+<!-- SECTION: FIRE AND FORGET PATTERN -->
+<section id="fire-and-forget">
+<h2>Fire-and-Forget Pattern</h2>
+
+<p>This is the core UX philosophy of FlockTrack. The user should NEVER wait for the network. Every action completes locally in under 50ms, and the network call happens silently in the background.</p>
+
+<div class="summary-box">
+<p><strong>Fire-and-forget means:</strong> The UI responds to the user action IMMEDIATELY based on local state. The network request fires asynchronously. If it succeeds, great. If it fails, the app queues it for retry. The user never sees a loading spinner for check-ins.</p>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>async function checkIn(memberId) {
+  // IMMEDIATE: Update local state and UI
+  const member = getMemberFromCache(memberId);
+  addToLocalAttendance(member);
+  renderAttendanceList();
+  showToast(`${member.name} checked in!`);
+  if (navigator.vibrate) navigator.vibrate(50);
+
+  // BACKGROUND: Network sync (user doesn't wait for this)
+  syncToServer({ action: 'checkIn', memberId, timestamp: Date.now() })
+    .catch(err => {
+      // Silent failure - already in IndexedDB, will retry
+      console.log('Sync failed, queued for retry:', err.message);
+    });
+}
+
+// The user saw "checked in!" 200ms ago.
+// The network request might still be in flight.
+// Or it might have failed. Doesn't matter - it's queued.</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you make your app feel fast?"</strong></p>
+<p>I use a fire-and-forget pattern. Every user action (check-in, adding a member, visitor registration) writes to IndexedDB first and updates the UI immediately. The server sync happens asynchronously in the background. This means the perceived latency is always under 50ms regardless of network speed. If the network fails, the change is queued and retried later. The user never sees a spinner for core actions.</p>
+</div>
+
+<div class="analogy-box">
+<p><strong>Fire-and-forget = Dropping a letter in a mailbox.</strong> You drop it in and walk away. You don't stand there waiting for the postal service to deliver it. You trust the system will eventually deliver it. If the mailbox is full, you come back later. The act of "sending" is instant from your perspective.</p>
+</div>
+
+<h3>Optimistic UI Updates</h3>
+<p>The UI shows the result of an action BEFORE the server confirms it. This is called "optimistic updating." You're optimistic that the server will accept it (which it almost always does). On the rare occasion it doesn't (duplicate check-in, expired member), the next sync cycle corrects the local state.</p>
+
+<div class="concept-grid">
+  <div class="concept-card"><h4>Optimistic UI</h4><p>Show success immediately, reconcile with server later. 99% of the time the server agrees. 1% gets auto-corrected.</p></div>
+  <div class="concept-card"><h4>Pessimistic UI</h4><p>Wait for server confirmation before showing success. Feels slow. Loading spinners everywhere. Used in banking apps where errors are costly.</p></div>
+</div>
+
+<div class="misconception-box">
+<p><strong>"Optimistic UI means you lose data."</strong> No. The data is safely in IndexedDB. "Optimistic" means you show the result before server confirmation, not that you discard the data. The local database IS a real database. The sync queue ensures nothing is lost. The worst case is the UI shows "checked in" and then 30 seconds later silently removes it because the server rejected it (already checked in today).</p>
+</div>
+</section>
+
+<!-- SECTION: EVENT DRIVEN -->
+<section id="event-driven">
+<h2>Event-Driven Architecture</h2>
+
+<p>FlockTrack doesn't use a polling loop or a framework's reactive state system. It's built on browser-native events and custom events that trigger specific handlers.</p>
+
+<h3>Events the App Listens To</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>User Events</h4><p>click, touchstart, input, submit. User taps a member photo, types in search, submits a visitor form.</p></div>
+  <div class="concept-card"><h4>Network Events</h4><p>online, offline. Browser tells the app when connectivity changes. Triggers sync flush or pause.</p></div>
+  <div class="concept-card"><h4>Visibility Events</h4><p>visibilitychange. Tab hidden/shown. Used to stop camera, pause sync, or refresh data on return.</p></div>
+  <div class="concept-card"><h4>Timer Events</h4><p>setInterval for sync cycle (every 30s). setTimeout for toast dismissal, blacklist expiry.</p></div>
+  <div class="concept-card"><h4>Service Worker Events</h4><p>install, activate, fetch. Lifecycle events that manage the cache and offline capability.</p></div>
+  <div class="concept-card"><h4>IndexedDB Events</h4><p>onsuccess, onerror, onupgradeneeded. Async database operations complete via callbacks.</p></div>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Network status detection
+window.addEventListener('online', () => {
+  showToast('Back online! Syncing...');
+  syncCycle(); // Immediately flush pending queue
+});
+
+window.addEventListener('offline', () => {
+  showToast('Offline mode. Check-ins saved locally.');
+});
+
+// Visibility: refresh data when user returns to app
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    // User came back to the app
+    refreshLocalData();
+    if (isScannerActive) restartScanner();
+  } else {
+    // User left the app
+    if (isScannerActive) stopScanning();
+  }
+});
+
+// Periodic sync
+setInterval(() => {
+  if (navigator.onLine) syncCycle();
+}, 30000); // Every 30 seconds</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Explain event-driven architecture."</strong></p>
+<p>Instead of the app constantly checking "did anything change?" (polling), it registers handlers for specific events and reacts only when something happens. In FlockTrack, the browser fires an 'online' event when WiFi reconnects, which triggers my sync function. A 'visibilitychange' event fires when the user returns to the tab, which refreshes data. User clicks fire check-in handlers. This is more efficient than polling because the CPU is idle between events, and responses are immediate because the handler fires the instant the event occurs.</p>
+</div>
+</section>
+
+<!-- SECTION: REGISTRATION FLOW -->
+<section id="registration-flow">
+<h2>Member Registration Flow</h2>
+
+<p>The end-to-end journey from "new member wants to join" to "member can check in with QR code."</p>
+
+<h3>Step-by-Step Flow</h3>
+<ol style="color:var(--text-light);padding-left:1.5rem;margin-bottom:1rem;line-height:2.2;">
+<li>Church shares a Google Form link (via QR poster at entrance, Facebook group, etc.)</li>
+<li>New member fills the form: name, email, phone, uploads a selfie</li>
+<li>Google Form saves response to a connected Sheet</li>
+<li>Apps Script <code>onFormSubmit</code> trigger fires automatically</li>
+<li>Script checks for duplicate names using <code>namesMatch()</code></li>
+<li>If unique: generates UUID, creates Members row, generates QR image URL</li>
+<li>Script emails the member their personal QR code with instructions</li>
+<li>Member saves QR to phone. Next Sunday, they show it at the door.</li>
+</ol>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Google Form trigger (runs server-side in Apps Script)
+function onFormSubmit(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000); // Prevent race conditions
+
+  try {
+    const name = e.namedValues['Full Name'][0].trim();
+    const email = e.namedValues['Email'][0].trim();
+    const phone = e.namedValues['Phone'][0] || '';
+    const photoUrl = e.namedValues['Photo'][0] || '';
+
+    // Duplicate check
+    const members = getMembersSheet().getDataRange().getValues();
+    const isDuplicate = members.some(row => namesMatch(row[COL_MEM.NAME - 1], name));
+
+    if (isDuplicate) {
+      // Email admin about potential duplicate
+      notifyAdmin(`Potential duplicate registration: ${name}`);
+      return;
+    }
+
+    // Generate unique ID
+    const memberId = Utilities.getUuid();
+
+    // Write to sheet
+    getMembersSheet().appendRow([
+      memberId, name, email, phone, photoUrl, '',
+      'General', 'Active', new Date()
+    ]);
+
+    // Generate and email QR
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${memberId}`;
+    sendWelcomeEmail(email, name, qrImageUrl);
+
+  } finally {
+    lock.releaseLock();
+  }
+}</pre>
+</div>
+
+<div class="example-box">
+<p><strong>Why LockService?</strong> If two people submit the form at the exact same time, two instances of <code>onFormSubmit</code> run in parallel. Without a lock, both might read the members list, both see no duplicate, and both write; creating a duplicate. <code>LockService</code> makes the second execution wait until the first finishes. It's Apps Script's version of a mutex.</p>
+</div>
+</section>
+
+<!-- SECTION: SYNC DEEP DIVE -->
+<section id="sync-deep-dive">
+<h2>Sync Cycle Deep-Dive</h2>
+
+<p>The sync cycle is the heartbeat of the offline-first system. It runs every 30 seconds (when online) and does two things: pushes local changes to the server, and pulls server truth to local.</p>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>async function syncCycle() {
+  if (!navigator.onLine) return;
+  if (syncInProgress) return; // Prevent overlapping syncs
+  syncInProgress = true;
+
+  try {
+    // PHASE 1: Push outgoing queue
+    const queue = await getAllFromStore('syncQueue');
+    let pushed = 0;
+
+    for (const item of queue) {
+      if (isBlacklisted(item.memberId)) {
+        await deleteFromStore('syncQueue', item.id);
+        continue;
+      }
+
+      try {
+        const result = await apiCall(item.payload);
+        if (result.status === 'success' || result.status === 'already_checked_in') {
+          await deleteFromStore('syncQueue', item.id);
+          pushed++;
+        }
+      } catch (networkError) {
+        break; // Stop pushing, retry next cycle
+      }
+    }
+
+    // PHASE 2: Pull fresh server state
+    const serverAttendance = await apiCall({ action: 'getTodayAttendance' });
+    if (serverAttendance && serverAttendance.records) {
+      // Detect deletions (records we had locally but server doesn't)
+      const localRecords = await getAllFromStore('attendance');
+      const serverIds = new Set(serverAttendance.records.map(r => r.memberId));
+
+      for (const local of localRecords) {
+        if (!serverIds.has(local.memberId)) {
+          blacklistMember(local.memberId); // Prevent re-push
+        }
+      }
+
+      // Replace local with server truth
+      await clearStore('attendance');
+      for (const record of serverAttendance.records) {
+        await saveToIndexedDB('attendance', record);
+      }
+
+      renderAttendanceList(); // Update UI with fresh data
+    }
+
+    // Update sync status indicator
+    updateSyncBadge(pushed, queue.length);
+
+  } finally {
+    syncInProgress = false;
+  }
+}</pre>
+</div>
+
+<div class="summary-box">
+<p><strong>Push then Pull.</strong> Always push first, then pull. If you pull first, you'd overwrite local changes that haven't been pushed yet. The queue ensures nothing is lost. After pushing, you pull the authoritative server state and replace local cache entirely. This two-phase approach guarantees eventual consistency without complex merge logic.</p>
+</div>
+
+<h3>Sync Status Indicator</h3>
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>function updateSyncBadge(pushed, remaining) {
+  const badge = document.getElementById('syncBadge');
+  if (remaining === 0) {
+    badge.textContent = '✓ Synced';
+    badge.className = 'sync-badge synced';
+  } else {
+    badge.textContent = `${remaining} pending`;
+    badge.className = 'sync-badge pending';
+  }
+}
+// User always knows: are there unsent check-ins?</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you handle data consistency between client and server?"</strong></p>
+<p>I use a push-then-pull sync cycle. Local writes go to an IndexedDB queue. Every 30 seconds, the app pushes queued items to the server, then pulls the full server state for today. The server is always authoritative; after pulling, local state is completely replaced. This gives eventual consistency without conflict resolution logic. The trade-off is that very recent check-ins (under 30 seconds old) might temporarily show differently on two devices, but they converge at the next sync. For a church attendance use case, 30-second convergence is perfectly acceptable.</p>
+</div>
+</section>
+
+<!-- SECTION: ERROR HANDLING -->
+<section id="error-handling">
+<h2>Error Handling Strategy</h2>
+
+<p>In an offline-first app, errors are expected. The network WILL fail. The camera WILL glitch. The server WILL be slow. Every error path must be designed, not just caught.</p>
+
+<h3>Error Categories</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>Network Errors</h4><p>Handled by sync queue. Check-in saved locally, retried later. User never sees a network error for core flows.</p></div>
+  <div class="concept-card"><h4>Server Errors</h4><p>Apps Script returns {error: message}. Shown as a toast. Non-blocking. User can continue working offline.</p></div>
+  <div class="concept-card"><h4>Camera Errors</h4><p>Permission denied, hardware failure, track ended. Graceful fallback to Quick Tap or Search method.</p></div>
+  <div class="concept-card"><h4>IndexedDB Errors</h4><p>Storage full, permission denied (private browsing). Shown as warning. App still works for single-session use.</p></div>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Graceful camera error handling
+async function startScanning() {
+  try {
+    await qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      onScanSuccess,
+      () => {} // Silent scan failures (no QR in frame) are normal
+    );
+  } catch (err) {
+    if (err.name === 'NotAllowedError') {
+      showToast('Camera permission denied. Use Quick Tap instead.');
+      switchToQuickTap();
+    } else if (err.name === 'NotFoundError') {
+      showToast('No camera found. Use Search instead.');
+      switchToSearch();
+    } else {
+      showToast('Camera error. Trying alternative method...');
+      switchToQuickTap();
+    }
+  }
+}
+
+// API call wrapper with timeout
+async function apiCall(payload, timeoutMs = 15000) {
+  const url = SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Request timed out');
+    throw err;
+  }
+}</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you handle errors in a user-facing app?"</strong></p>
+<p>I categorize errors by impact. Network errors are invisible to the user because the offline queue handles them silently. Camera errors trigger a graceful fallback to an alternative check-in method (photo grid or search). Server errors show a non-blocking toast notification. The principle is: never let an error stop the user from completing their task. Always offer an alternative path. Critical errors (IndexedDB failure) get a clear explanation of what happened and what to do (refresh the page, clear browser data).</p>
+</div>
+</section>
+
+<!-- SECTION: PERFORMANCE -->
+<section id="performance">
+<h2>Performance Decisions</h2>
+
+<h3>Why Single-File Architecture?</h3>
+<div class="code-block">
+<span class="lang-tag">text</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>Traditional app:              FlockTrack:
+index.html     (1 request)    index.html (1 request, everything inside)
+styles.css     (1 request)    - CSS in &lt;style&gt; tag
+app.js         (1 request)    - JS in &lt;script&gt; tag
+utils.js       (1 request)    - HTML templates inline
+components.js  (1 request)
+─────────────────────────     ─────────────────────────
+5 HTTP requests               1 HTTP request
+Multiple cache entries        1 cache entry in SW
+Complex dependency graph      Zero dependencies (except QR libs)</pre>
+</div>
+
+<div class="concept-grid">
+  <div class="concept-card"><h4>Lazy Loading Images</h4><p><code>loading="lazy"</code> on member photos. Only loads images as they scroll into view. Critical for 500+ member grid.</p></div>
+  <div class="concept-card"><h4>Debounced Search</h4><p>Name search doesn't fire on every keystroke. Waits 300ms after last keypress. Reduces reflows and filtering passes.</p></div>
+  <div class="concept-card"><h4>Virtual Rendering</h4><p>Quick Tap grid only renders visible members. Scrolling dynamically adds/removes DOM nodes. Prevents 500+ image nodes in memory.</p></div>
+  <div class="concept-card"><h4>Minimal Dependencies</h4><p>Only 2 external libs: html5-qrcode (camera scanning) and qrcodejs (QR generation). Both cached by Service Worker.</p></div>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Debounced search
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    const query = e.target.value.toLowerCase().trim();
+    if (query.length < 2) { renderAllMembers(); return; }
+
+    const filtered = memberCache.filter(m =>
+      m.name.toLowerCase().includes(query) ||
+      m.group.toLowerCase().includes(query)
+    );
+    renderMemberGrid(filtered);
+  }, 300);
+});</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How did you optimize performance?"</strong></p>
+<p>Several techniques. First, single-file architecture means one HTTP request and one Service Worker cache entry, so the app loads in under 1 second even on 3G. Second, lazy loading for the 500+ member photo grid; images only load as they scroll into view. Third, debounced search input (300ms delay) to prevent excessive re-renders. Fourth, the fire-and-forget pattern means zero network latency in the UI. The bottleneck is never the app; it's the Google Apps Script cold start (~2-3 seconds for the first request after inactivity).</p>
+</div>
+</section>
+
+<!-- SECTION: APPS SCRIPT LIMITATIONS -->
+<section id="gas-limitations">
+<h2>Google Apps Script: Quirks and Workarounds</h2>
+
+<h3>Cold Starts</h3>
+<p>When no one has called your Apps Script in ~5 minutes, the next request takes 2-5 seconds (cold start). Google spins down inactive scripts to save resources. This isn't a bug, it's serverless behavior (same as AWS Lambda cold starts).</p>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Frontend: handle cold start gracefully
+async function apiCallWithRetry(payload) {
+  const TIMEOUT_FIRST = 10000;  // 10s for potentially cold start
+  const TIMEOUT_RETRY = 5000;   // 5s for warm retry
+
+  try {
+    return await apiCall(payload, TIMEOUT_FIRST);
+  } catch (err) {
+    if (err.message === 'Request timed out') {
+      // Cold start might have warmed it up, retry immediately
+      return await apiCall(payload, TIMEOUT_RETRY);
+    }
+    throw err;
+  }
+}</pre>
+</div>
+
+<h3>Execution Quotas</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>90 min/day</h4><p>Total script execution time. Each check-in takes ~1s. That's 5,400 check-ins/day. More than enough for a church.</p></div>
+  <div class="concept-card"><h4>6 min/execution</h4><p>Single function max runtime. BulkSync with 100 items finishes in ~30s. Safe margin.</p></div>
+  <div class="concept-card"><h4>20K emails/day</h4><p>Gmail send limit. Even if every member re-requests their QR, 500 is well under 20K.</p></div>
+  <div class="concept-card"><h4>20 triggers</h4><p>Max installable triggers. FlockTrack uses 1 (onFormSubmit). Plenty of headroom.</p></div>
+</div>
+
+<h3>The 302 Redirect Issue</h3>
+<p>When you deploy Apps Script as "Execute as: Me" and "Access: Anyone," Google adds a 302 redirect from <code>script.google.com</code> to a unique execution URL. This redirect is where iOS Safari drops POST bodies. Other browsers handle it fine. This is documented in Google's issue tracker but never fixed.</p>
+
+<div class="example-box">
+<p><strong>Request flow (what actually happens):</strong></p>
+</div>
+<div class="code-block">
+<span class="lang-tag">text</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>1. Client sends GET to: https://script.google.com/macros/s/ABC123/exec?data={...}
+2. Google responds: 302 Redirect -> https://script.googleusercontent.com/macros/echo?...
+3. Browser follows redirect (GET params preserved in URL)
+4. Apps Script doGet(e) receives the request with e.parameter.data intact
+
+If this were POST:
+1. Client sends POST to: https://script.google.com/macros/s/ABC123/exec
+   Body: data={...}
+2. Google responds: 302 Redirect
+3. iOS Safari follows redirect but DROPS the POST body
+4. Apps Script doGet(e) receives empty request -> fails silently</pre>
+</div>
+</section>
+
+<!-- SECTION: INTERVIEW -->
+<section id="interview">
+<h2>Interview Prep Answers</h2>
+
+<div class="interview-box">
+<p><strong>Q: "What's the most challenging bug you've solved?"</strong></p>
+<p>The ghost sync bug. After an admin deleted a check-in from the server, the device that originally recorded it would re-push the check-in on its next sync cycle, effectively undoing the deletion. The root cause was that the device's IndexedDB still had the record and the sync logic assumed local data was always valid to push. My fix was a 60-second blacklist: when a sync reveals a record was deleted server-side, that member ID is blacklisted locally for 60 seconds, preventing re-push. By the next sync cycle, the local store has been refreshed from the server and the deleted record is gone.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How would you scale this?"</strong></p>
+<p>Google Sheets hits limits around 10K rows and concurrent writes. The migration path is clear: (1) Replace Google Sheets with Firebase Firestore (still free tier viable, real-time sync, proper queries). (2) Replace Apps Script with Firebase Cloud Functions (same JavaScript, proper HTTP handling). (3) Keep the PWA frontend as-is; only the API URL changes. The offline-first architecture with IndexedDB remains identical. The abstraction between frontend and backend (JSON over HTTP) makes this swap straightforward.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "What would you do differently?"</strong></p>
+<p>Three things. First, I'd add TypeScript from the start; even in a single file, type annotations prevent bugs as complexity grows. Second, I'd implement versioned sync; right now the full attendance list refreshes each cycle, but a diff-based sync (only send changes since last sync timestamp) would reduce bandwidth. Third, I'd add error boundaries; currently, a failed API call during sync silently retries, but there's no user-visible indication of sync staleness beyond manual checking.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Why not use Firebase from the start?"</strong></p>
+<p>Constraint-driven design. The church needed zero recurring costs and zero vendor lock-in beyond Google. Google Sheets is something any church admin can open and understand; it's literally a spreadsheet. Firebase would be more powerful but requires a Google Cloud billing account (even on free tier), and the data lives in a proprietary database only developers can access. With Sheets, the pastor can open it and see today's attendance. That accessibility was a hard requirement.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you test this?"</strong></p>
+<p>Manual testing with multiple devices (Android, iPhone, desktop). For offline scenarios, I use Chrome DevTools to simulate offline mode and verify IndexedDB writes. For the Apps Script backend, I use the built-in execution log and test with curl commands. I don't have automated tests; for a side project of this scope, the cost of setting up a test framework exceeds the bug-prevention benefit. If this were a team project or growing in complexity, I'd add Jest for the frontend logic and clasp for Apps Script unit tests.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Explain your app's data flow in 30 seconds."</strong></p>
+<p>User taps check-in. The app writes to IndexedDB immediately, so the UI confirms instantly. In the background, it sends an HTTPS GET request to Google Apps Script with the member ID encoded as JSON in the URL. Apps Script parses it, appends a row to the Attendance sheet, and returns success. If the network is down, the check-in stays in a local sync queue and retries every 30 seconds. When connection returns, the queue flushes and local data refreshes from the server.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "What design patterns did you use?"</strong></p>
+<p>Several. <strong>Observer pattern:</strong> event listeners for network status, visibility changes, and user actions. <strong>Queue pattern:</strong> IndexedDB sync queue for reliable message delivery. <strong>Cache-aside pattern:</strong> Service Worker checks cache first, falls back to network. <strong>Optimistic concurrency:</strong> UI updates immediately, reconciles with server truth later. <strong>Facade pattern:</strong> the <code>apiCall()</code> function hides the complexity of JSON encoding, URL construction, timeout management, and error handling behind a simple interface.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How does the QR code system work?"</strong></p>
+<p>Each member gets a unique UUID when they register via Google Form. That UUID is encoded into a QR code image and emailed to them. At church, the greeter opens FlockTrack's scan mode, which activates the device camera using the html5-qrcode library. When the camera reads a QR, it decodes the UUID, looks it up in the local member cache, and fires a check-in. The whole scan-to-confirmed flow takes under 500ms because the member lookup is local (IndexedDB cache) and the check-in is fire-and-forget.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "What's the difference between a PWA and a native app?"</strong></p>
+<p>A PWA runs in the browser engine, is installed from a URL (no app store), updates automatically on next load, and works cross-platform with one codebase. A native app is compiled for a specific OS, distributed through app stores, requires manual updates, but gets full hardware API access (Bluetooth, NFC, file system). For FlockTrack, a PWA is ideal because we only need camera access (Web API supports it), the church doesn't want to manage App Store/Play Store listings, and instant updates mean bug fixes deploy immediately without waiting for store review.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "Walk me through what happens when the user has no internet."</strong></p>
+<p>First, the app loads because the Service Worker serves index.html from cache. The member list loads from IndexedDB (cached from last sync). The user taps a member to check in. The check-in writes to IndexedDB's attendance store AND adds an entry to the sync queue. The UI shows "Checked in!" with a small "pending sync" indicator. Every 30 seconds, the sync cycle checks <code>navigator.onLine</code>. When the browser detects connectivity (WiFi reconnects), the 'online' event fires, triggering an immediate sync. The queue flushes all pending check-ins to the server. Then the app pulls fresh data from the server and updates the UI. The user may not even notice it was offline.</p>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "What happens if two people check in the same member simultaneously from different devices?"</strong></p>
+<p>Both devices save locally and both push to the server. The server's check-in handler queries the Attendance sheet for today's date + that member ID. The first push succeeds and writes a row. The second push finds the existing row and returns <code>{status: 'already_checked_in'}</code>. Both devices show success locally (optimistic UI). On the next sync pull, both devices get the same single attendance record from the server. No duplicate row in the sheet. The deduplication happens server-side via the "check before write" pattern.</p>
+</div>
+
+<h3>Quick Reference: Technical Vocabulary</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>PWA</h4><p>Progressive Web App. Web site that passes installability criteria (HTTPS + manifest + Service Worker).</p></div>
+  <div class="concept-card"><h4>Service Worker</h4><p>Background script that intercepts fetch requests. Enables offline caching and push notifications.</p></div>
+  <div class="concept-card"><h4>IndexedDB</h4><p>Browser-native NoSQL database. Async, transactional, stores structured data up to hundreds of MB.</p></div>
+  <div class="concept-card"><h4>Cache API</h4><p>Stores HTTP Response objects keyed by Request. Used by Service Worker for offline asset serving.</p></div>
+  <div class="concept-card"><h4>Web App Manifest</h4><p>JSON file that declares app metadata (name, icons, display mode) for installability.</p></div>
+  <div class="concept-card"><h4>Optimistic UI</h4><p>Show action result before server confirms. Revert if server rejects. Feels instant.</p></div>
+  <div class="concept-card"><h4>Fire-and-Forget</h4><p>Execute async operation without awaiting result. Handle success/failure in background callback.</p></div>
+  <div class="concept-card"><h4>Eventual Consistency</h4><p>All nodes converge to same state given enough time. Not instantly consistent, but guaranteed eventually.</p></div>
+  <div class="concept-card"><h4>Cold Start</h4><p>First invocation of a serverless function after idle period. Incurs initialization overhead (2-5s).</p></div>
+  <div class="concept-card"><h4>Mutex / Lock</h4><p>Mechanism to prevent concurrent access. Apps Script's LockService prevents duplicate registrations.</p></div>
+  <div class="concept-card"><h4>Debouncing</h4><p>Delay execution until input stops. Prevents firing on every keystroke in search.</p></div>
+  <div class="concept-card"><h4>Idempotent</h4><p>Same request can be sent multiple times with same result. FlockTrack's check-in is idempotent (server deduplicates).</p></div>
+</div>
+
+<h3>Architecture Decision Records</h3>
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>ADR-001: Why Google Sheets over Firebase?</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Context:</strong> Need a free, accessible backend for church attendance.</p>
+<p><strong>Decision:</strong> Google Sheets as database, Apps Script as API.</p>
+<p><strong>Reasons:</strong> (1) Zero cost, no billing account needed. (2) Church admins can open Sheets directly and see/edit data. (3) Built-in formulas for quick reports. (4) No vendor lock-in beyond Google ecosystem they already use.</p>
+<p><strong>Trade-offs:</strong> No real queries, slow at scale, no ACID. Acceptable for 500 members and append-only writes.</p>
+<p><strong>Revisit when:</strong> Members exceed 2000 or concurrent users exceed 10.</p>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>ADR-002: Why Vanilla JS over React?</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Context:</strong> Need fast, offline-capable, easily cacheable frontend.</p>
+<p><strong>Decision:</strong> Single HTML file with inline CSS and JS, no framework.</p>
+<p><strong>Reasons:</strong> (1) One file = one cache entry = trivial Service Worker. (2) No build step = edit and deploy in seconds. (3) No framework bundle = faster first paint. (4) Total control over DOM = easier to debug camera/offline edge cases.</p>
+<p><strong>Trade-offs:</strong> Manual DOM manipulation, no component reuse, harder to scale codebase past 3000 lines.</p>
+<p><strong>Revisit when:</strong> App grows beyond 3 views or needs complex state management.</p>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>ADR-003: Why Offline-First over Online-First?</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Context:</strong> Church venue has unreliable WiFi. Sunday morning = 500 people on same network.</p>
+<p><strong>Decision:</strong> All check-ins write locally first, sync to server in background.</p>
+<p><strong>Reasons:</strong> (1) Check-in must work even with zero connectivity. (2) User experience must be instant (no spinners). (3) Multiple devices can operate independently and converge later.</p>
+<p><strong>Trade-offs:</strong> Eventual consistency (not instant). Deleted records can ghost-sync back (solved with blacklist). More complex sync logic.</p>
+<p><strong>Revisit when:</strong> Real-time features needed (live attendance count for projector display).</p>
+</div>
+</div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">
+<h4>ADR-004: Why GET for Writes?</h4>
+<span class="chevron">▼</span>
+</div>
+<div class="collapsible-content">
+<div class="collapsible-content-inner">
+<p><strong>Context:</strong> iOS Safari drops POST body on Apps Script's 302 redirect.</p>
+<p><strong>Decision:</strong> All API calls use GET with JSON-encoded query parameter.</p>
+<p><strong>Reasons:</strong> (1) Works on ALL browsers/devices without exception. (2) Simple to implement and debug (URL visible in DevTools). (3) Payloads are small (member ID + timestamp fits easily in URL).</p>
+<p><strong>Trade-offs:</strong> Violates REST semantics. URL length limited to ~2048 chars. Server logs expose payload data. Acceptable for internal church app.</p>
+<p><strong>Revisit when:</strong> Payloads exceed 1KB or security audit requires POST-only writes.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION: DEPLOYMENT -->
+<section id="deployment">
+<h2>Deployment &amp; DevOps</h2>
+
+<h3>GitHub Pages Hosting</h3>
+<p>The entire frontend is a static site hosted on GitHub Pages. Push to <code>main</code> branch, GitHub builds and serves it at <code>https://username.github.io/FlockTrack/</code>. Free HTTPS included (required for PWA).</p>
+
+<div class="code-block">
+<span class="lang-tag">text</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>Repository Structure:
+FlockTrack/
+├── index.html          # The entire app (HTML + CSS + JS)
+├── sw.js               # Service Worker
+├── manifest.json       # PWA manifest
+├── icons/
+│   ├── logo.png        # App logo
+│   ├── icon-192.png    # PWA icon (192x192)
+│   └── icon-512.png    # PWA icon (512x512)
+└── README.md           # Documentation
+
+That's it. 5 files. The entire production app.</pre>
+</div>
+
+<h3>Deployment Flow</h3>
+<div class="code-block">
+<span class="lang-tag">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre># Development cycle:
+1. Edit index.html locally
+2. Test in browser (file:// or localhost)
+3. git add . && git commit -m "Add visitor registration flow"
+4. git push origin main
+5. GitHub Pages auto-deploys in ~60 seconds
+6. Users get new version on next app load (SW updates cache)
+
+# No CI/CD pipeline needed. No Docker. No Kubernetes.
+# Push = Deploy. Done.</pre>
+</div>
+
+<h3>Service Worker Versioning</h3>
+<p>When you update the app, you bump the <code>CACHE_NAME</code> version string in sw.js. Next time a user opens the app, the browser detects the SW file changed, installs the new version, and on the NEXT page load activates it (replacing old cache with new assets).</p>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Before update:
+const CACHE_NAME = 'flocktrack-v2';
+
+// After update (just bump the version):
+const CACHE_NAME = 'flocktrack-v3';
+
+// The activate event handler automatically deletes old caches:
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME)  // Delete anything that's not v3
+            .map(k => caches.delete(k))
+      )
+    )
+  );
+});</pre>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "How do you deploy updates to users?"</strong></p>
+<p>I push to GitHub's main branch, and GitHub Pages serves the new version within 60 seconds. When users open the app, the browser checks if sw.js has changed. If the CACHE_NAME version string is different, it installs the new Service Worker, which re-caches all assets. On the next page load, the new version activates and the old cache is deleted. Users always get the latest version without manual intervention, no app store review, no forced updates. It's one of the key advantages of PWA over native apps.</p>
+</div>
+
+<h3>Apps Script Deployment</h3>
+<div class="code-block">
+<span class="lang-tag">text</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>Google Apps Script deployment:
+1. Open script.google.com
+2. Edit Code.gs (the backend logic)
+3. Deploy > Manage deployments > New deployment
+4. Type: Web app
+5. Execute as: Me (uses my Google account's permissions)
+6. Who has access: Anyone (public URL, no Google login needed)
+7. Click Deploy > Copy the URL
+8. Paste URL into index.html as SCRIPT_URL constant
+
+# Important: Each new deployment gets a new URL unless you
+# update an existing deployment. Always "edit" existing deployment
+# to keep the same URL that the frontend already knows.</pre>
+</div>
+</section>
+
+<!-- SECTION: SECURITY MODEL -->
+<section id="security-model">
+<h2>Security Model</h2>
+
+<p>FlockTrack is an internal church tool, not a banking app. The threat model is "prevent casual unauthorized access," not "defend against skilled attackers." The security is proportional to the risk.</p>
+
+<h3>Layers of Protection</h3>
+<div class="concept-grid">
+  <div class="concept-card"><h4>Device Fingerprint</h4><p>Each device has a UUID in localStorage. Must be admin-approved. Prevents random people from checking in members.</p></div>
+  <div class="concept-card"><h4>Apps Script Auth</h4><p>Script executes as the owner's Google account. Sheet access is controlled by Google's sharing permissions. Only the script can write.</p></div>
+  <div class="concept-card"><h4>HTTPS Only</h4><p>GitHub Pages enforces HTTPS. All data in transit is encrypted. No one can sniff check-in traffic.</p></div>
+  <div class="concept-card"><h4>No Sensitive Data</h4><p>The app stores names, emails, and attendance dates. No passwords, no financial data, no health records. Low-stakes data reduces security requirements.</p></div>
+</div>
+
+<h3>What's NOT Secured (and why that's OK)</h3>
+<div class="misconception-box">
+<p><strong>"The API URL is public, anyone can call it."</strong> True. But every request requires a valid device fingerprint that's been admin-approved. Unapproved devices get rejected. Could someone reverse-engineer a valid fingerprint? Theoretically yes, but the reward (marking someone present at church) doesn't justify the effort. Security is always proportional to the value of what you're protecting.</p>
+</div>
+
+<div class="code-block">
+<span class="lang-tag">JavaScript</span>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre>// Server-side device validation (in Apps Script)
+function validateDevice(deviceId) {
+  const devicesSheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName('Devices');
+  const devices = devicesSheet.getDataRange().getValues();
+
+  const device = devices.find(row => row[0] === deviceId);
+
+  if (!device) return { valid: false, reason: 'unknown_device' };
+  if (device[2] !== 'approved') return { valid: false, reason: 'not_approved' };
+  if (device[3] === 'revoked') return { valid: false, reason: 'revoked' };
+
+  // Update last-seen timestamp
+  const rowIndex = devices.indexOf(device) + 1;
+  devicesSheet.getRange(rowIndex, 5).setValue(new Date());
+
+  return { valid: true };
+}
+
+// Every action checks device first
+function handleCheckIn(payload) {
+  const deviceCheck = validateDevice(payload.deviceId);
+  if (!deviceCheck.valid) {
+    return jsonResponse({ error: 'Device not authorized', reason: deviceCheck.reason });
+  }
+  // ... proceed with check-in
+}</pre>
+</div>
+</section>
+
+<!-- SECTION: FUTURE ROADMAP -->
+<section id="future">
+<h2>Future Improvements (Discussion Points)</h2>
+
+<div class="concept-grid">
+  <div class="concept-card"><h4>Push Notifications</h4><p>Remind members on Sunday morning. Service Workers support Push API. Would need a push server (Firebase Cloud Messaging is free).</p></div>
+  <div class="concept-card"><h4>Attendance Analytics</h4><p>Dashboard showing trends: growth rate, regular vs irregular attendees, group participation. Could use Google Sheets' built-in charts or add Chart.js.</p></div>
+  <div class="concept-card"><h4>Multi-Church Support</h4><p>Same codebase, different Sheets backend per church. Config-driven: pass Sheet ID as URL parameter or environment variable.</p></div>
+  <div class="concept-card"><h4>NFC Check-in</h4><p>Web NFC API (Chrome Android only) could let members tap their phone on a reader. Faster than QR scanning.</p></div>
+  <div class="concept-card"><h4>TypeScript Migration</h4><p>Type safety catches bugs early. Could migrate incrementally with JSDoc types first, then full .ts conversion with a build step.</p></div>
+  <div class="concept-card"><h4>Firebase Migration</h4><p>When Sheets becomes the bottleneck. Firestore gives real-time sync, proper queries, and offline support built-in. Same free tier model.</p></div>
+</div>
+
+<div class="interview-box">
+<p><strong>Q: "If you had unlimited time, what would you add?"</strong></p>
+<p>Three things in priority order. First, attendance analytics; a dashboard showing weekly trends, member engagement scores, and group health metrics. Second, push notifications to remind members on Sunday mornings (Web Push API through Firebase Cloud Messaging). Third, a TypeScript migration; the codebase is approaching 2000 lines where type safety would prevent whole categories of bugs. Each of these is a clear next step that builds on the existing architecture without requiring a rewrite.</p>
+</div>
+
+<div class="summary-box">
+<p><strong>Final takeaway for interviews:</strong> FlockTrack demonstrates that you can ship a real, production app used by 500+ people using zero infrastructure cost, zero frameworks, and smart engineering trade-offs. The key skills it showcases: PWA architecture, offline-first design, serverless backends, pragmatic problem-solving (iOS bugs, ghost syncs, camera handling), and understanding when "good enough" beats "theoretically perfect."</p>
+</div>
+</section>
+
+<!-- SECTION: CHEAT SHEET -->
+<section id="cheatsheet">
+<h2>Interview Cheat Sheet</h2>
+
+<p>Quick-reference cards for when you're about to walk into the interview. Skim these to prime your brain.</p>
+
+<div class="card">
+<h3 style="color:var(--teal);margin-bottom:0.8rem;">30-Second Elevator Pitch</h3>
+<p>"I built a Progressive Web App for my church that tracks attendance for 500+ members. It works fully offline, costs zero to run, and handles three check-in methods: QR scanning, photo grid taps, and search. The backend is Google Sheets with Apps Script as the API. I solved real production bugs like iOS camera leaks, ghost sync conflicts, and Safari's POST body drop on redirects."</p>
+</div>
+
+<div class="card">
+<h3 style="color:var(--gold);margin-bottom:0.8rem;">Key Numbers to Remember</h3>
+<ul style="list-style:none;padding:0;color:var(--text-light);">
+<li>📊 <strong>500+</strong> active members</li>
+<li>📱 <strong>3</strong> check-in methods (QR, Tap, Search)</li>
+<li>💰 <strong>$0</strong> monthly cost (GitHub Pages + Google Sheets + Apps Script)</li>
+<li>📄 <strong>1</strong> HTML file (~2000 lines) for entire frontend</li>
+<li>⚡ <strong>&lt;50ms</strong> perceived check-in latency (fire-and-forget)</li>
+<li>🔄 <strong>30s</strong> sync cycle interval</li>
+<li>📦 <strong>5</strong> files total in production repo</li>
+<li>🗄️ <strong>5</strong> database tabs (Members, Attendance, Visitors, Config, Devices)</li>
+</ul>
+</div>
+
+<div class="card">
+<h3 style="color:var(--purple);margin-bottom:0.8rem;">Technical Decisions You Made (and Why)</h3>
+<ul style="list-style:disc;padding-left:1.5rem;color:var(--text-light);line-height:2;">
+<li><strong>Vanilla JS over React:</strong> Zero build step, single cache entry, full control over camera/offline edge cases</li>
+<li><strong>GET over POST:</strong> iOS Safari drops POST body on Apps Script's 302 redirect</li>
+<li><strong>IndexedDB over localStorage:</strong> Structured data, async, larger capacity, proper transactions</li>
+<li><strong>Cache-first over network-first:</strong> App must load instantly even offline; stale assets are acceptable</li>
+<li><strong>Server-authoritative over client-authoritative:</strong> Prevents conflicts; simple deduplication</li>
+<li><strong>Device fingerprint over user login:</strong> Shared devices at church door; no one wants to log in to mark attendance</li>
+<li><strong>Single file over module splitting:</strong> Simpler caching, faster load, acceptable at 2000 lines</li>
+<li><strong>Google Sheets over Firebase:</strong> Non-technical admins can read/edit data directly; truly zero cost</li>
+</ul>
+</div>
+
+<div class="card">
+<h3 style="color:var(--coral);margin-bottom:0.8rem;">Bugs That Show Engineering Maturity</h3>
+<p style="margin-bottom:0.5rem;">These are the stories interviewers remember. Each one shows debugging skill and real-world thinking:</p>
+<ul style="list-style:disc;padding-left:1.5rem;color:var(--text-light);line-height:2;">
+<li><strong>Ghost sync:</strong> Deleted records reappearing because device re-pushed from local cache. Fixed with 60s blacklist.</li>
+<li><strong>iOS camera leak:</strong> Camera staying active after tab switch causing overheating. Fixed with explicit track stopping on visibilitychange.</li>
+<li><strong>POST body vanishing:</strong> Silent failure on iPhones only. Root caused to Safari + 302 redirect interaction. Fixed by switching to GET.</li>
+<li><strong>Flip camera black screen:</strong> Must await scanner.stop() before restarting with new facing mode. Race condition.</li>
+<li><strong>Splash screen flicker:</strong> Sub-100ms load caused jarring flash. Fixed with Date.now() minimum delay of 1.5s.</li>
+<li><strong>Duplicate names:</strong> "Maria Santos" vs "Maria C. Santos". Fixed with fuzzy namesMatch() normalization.</li>
+</ul>
+</div>
+
+<div class="card">
+<h3 style="color:var(--mint);margin-bottom:0.8rem;">Vocabulary You Should Use Naturally</h3>
+<p style="color:var(--text-light);">Drop these terms in context (don't force them):</p>
+<p style="color:var(--text-muted);line-height:2;">Progressive Web App, Service Worker, Cache API, IndexedDB, Web App Manifest, offline-first, fire-and-forget, optimistic UI, eventual consistency, event-driven, serverless, cold start, idempotent, debouncing, lazy loading, cache invalidation, mutex/lock, deduplication, graceful degradation, constraint-driven design</p>
+</div>
+</section>
+
+</div><!-- end main -->
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <button onclick="navigateSection(-1)">← Prev</button>
+  <span class="section-indicator" id="sectionIndicator">1 / 12</span>
+  <button onclick="navigateSection(1)">Next →</button>
+</div>
+
+<script>
+// Theme Toggle
+const toggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+toggle.addEventListener('click', () => {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  toggle.textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+});
+
+// Hamburger
+const hamburger = document.getElementById('hamburger');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+function toggleSidebar() { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); hamburger.classList.toggle('active'); }
+hamburger.addEventListener('click', toggleSidebar);
+overlay.addEventListener('click', toggleSidebar);
+sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', toggleSidebar));
+
+// Collapsible
+function toggleCollapsible(header) {
+  header.classList.toggle('active');
+  const content = header.nextElementSibling;
+  content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + 'px';
+}
+
+// Copy Code
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('pre').textContent;
+  navigator.clipboard.writeText(code);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 2000);
+}
+
+// IntersectionObserver
+const sections = document.querySelectorAll('section');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+sections.forEach(s => observer.observe(s));
+
+// Progress Bar
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  document.getElementById('progressBar').style.width = (scrolled * 100) + '%';
+});
+
+// Section Navigation
+let currentSection = 0;
+function navigateSection(dir) {
+  currentSection = Math.max(0, Math.min(sections.length - 1, currentSection + dir));
+  sections[currentSection].scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('sectionIndicator').textContent = `${currentSection + 1} / ${sections.length}`;
+}
+
+// Track current section
+const navObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      currentSection = Array.from(sections).indexOf(entry.target);
+      document.getElementById('sectionIndicator').textContent = `${currentSection + 1} / ${sections.length}`;
+      // Update active sidebar link
+      const sectionId = entry.target.getAttribute('id');
+      document.querySelectorAll('.sidebar a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + sectionId);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => navObserver.observe(s));
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    navigateSection(1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    navigateSection(-1);
+  } else if (e.key === 'Escape') {
+    if (sidebar.classList.contains('open')) toggleSidebar();
+  }
+});
+
+// Smooth scroll for sidebar links
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+  html.setAttribute('data-theme', savedTheme);
+  toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+}
+
+// Print-friendly: expand all collapsibles
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('.collapsible-content').forEach(c => {
+    c.style.maxHeight = c.scrollHeight + 'px';
+  });
+  document.querySelectorAll('.collapsible-header').forEach(h => {
+    h.classList.add('active');
+  });
+});
+
+// Animate cards on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('.card').forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = `opacity 0.5s ease ${i * 0.1}s, transform 0.5s ease ${i * 0.1}s`;
+    setTimeout(() => {
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 100);
+  });
+});
+
+// Easter egg: Konami code shows total study time
+let konamiSequence = [];
+const konamiCode = [38,38,40,40,37,39,37,39,66,65];
+document.addEventListener('keydown', (e) => {
+  konamiSequence.push(e.keyCode);
+  if (konamiSequence.length > 10) konamiSequence.shift();
+  if (konamiSequence.join(',') === konamiCode.join(',')) {
+    alert('You know the Konami code AND you studied this whole page? You\'re ready for that interview. 🎉');
+  }
+});
+</script>
+</body>
+</html>

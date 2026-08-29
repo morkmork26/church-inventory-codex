@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JILGM-STBC Attendance System | Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0f0e17;--surface:#1a1a2e;--card:#16213e;--text:#e8e8f0;--text-secondary:#9a9ab0;
+--accent:#d4a843;--accent2:#7b2ff7;--accent3:#00d4ff;--border:rgba(255,255,255,0.08);
+--gradient:linear-gradient(135deg,#d4a843,#f5d676,#c9952c);
+--gradient2:linear-gradient(135deg,#7b2ff7,#00d4ff);
+--success:#4caf50;--warning:#ff9800;--error:#f44336;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:14px}
+@media print{body{background:#fff;color:#222}:root{--bg:#fff;--surface:#f5f5f5;--card:#fafafa;--text:#222;--text-secondary:#555;--border:rgba(0,0,0,0.1)}.no-print{display:none!important}.page-break{page-break-before:always}}
+
+/* Layout */
+.container{max-width:900px;margin:0 auto;padding:24px}
+.header{text-align:center;padding:60px 24px 40px;border-bottom:1px solid var(--border);margin-bottom:40px}
+.header h1{font-size:28px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.header .version{font-size:12px;color:var(--text-secondary);margin-bottom:16px}
+.header .desc{font-size:15px;color:var(--text-secondary);max-width:500px;margin:0 auto}
+
+/* TOC */
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:48px}
+.toc h2{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--accent)}
+.toc ol{padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.toc li{font-size:13px}
+.toc a{color:var(--accent3);text-decoration:none;transition:color 0.2s}
+.toc a:hover{color:var(--accent);text-decoration:underline}
+
+/* Sections */
+.doc-section{margin-bottom:56px;scroll-margin-top:24px}
+.doc-section h2{font-size:22px;font-weight:700;margin-bottom:8px;padding-bottom:12px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:12px}
+.doc-section h2 .num{width:32px;height:32px;border-radius:10px;background:var(--gradient2);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.doc-section h3{font-size:16px;font-weight:700;margin:24px 0 12px;color:var(--accent)}
+.doc-section h4{font-size:14px;font-weight:600;margin:16px 0 8px;color:var(--accent3)}
+.doc-section p{margin-bottom:12px;color:var(--text-secondary)}
+
+/* Steps */
+.steps{display:flex;flex-direction:column;gap:16px;margin:16px 0}
+.step{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--gradient2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.step-content{flex:1}
+.step-content strong{display:block;margin-bottom:4px;font-size:13px}
+.step-content span{font-size:12px;color:var(--text-secondary)}
+
+/* Code/URL blocks */
+.url-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:'Consolas',monospace;font-size:12px;word-break:break-all;margin:12px 0;color:var(--accent3)}
+
+/* Tips */
+.tip{background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:12px;display:flex;gap:10px;align-items:flex-start}
+.tip.warning{background:rgba(255,152,0,0.08);border-color:rgba(255,152,0,0.2)}
+.tip.important{background:rgba(123,47,247,0.08);border-color:rgba(123,47,247,0.2)}
+.tip-icon{font-size:16px;flex-shrink:0}
+.tip-text{color:var(--text-secondary)}
+
+/* Tables */
+.doc-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+.doc-table th{background:var(--surface);text-align:left;padding:10px 12px;border:1px solid var(--border);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent)}
+.doc-table td{padding:10px 12px;border:1px solid var(--border);color:var(--text-secondary)}
+.doc-table tr:hover td{background:rgba(123,47,247,0.03)}
+
+/* Badge */
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.badge-green{background:rgba(76,175,80,0.15);color:#4caf50}
+.badge-orange{background:rgba(255,152,0,0.15);color:#ff9800}
+.badge-red{background:rgba(244,67,54,0.15);color:#f44336}
+.badge-purple{background:rgba(123,47,247,0.15);color:#7b2ff7}
+
+/* Flow inline */
+.inline-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0;font-size:12px;color:var(--text-secondary)}
+.inline-flow .arrow{color:var(--accent);font-weight:700}
+
+/* Footer */
+.doc-footer{text-align:center;padding:32px 24px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:11px;margin-top:48px}
+
+/* Nav sidebar */
+.side-nav{position:fixed;top:80px;right:24px;width:180px;display:flex;flex-direction:column;gap:6px}
+.side-nav a{font-size:11px;color:var(--text-secondary);text-decoration:none;padding:4px 12px;border-left:2px solid var(--border);transition:all 0.2s}
+.side-nav a:hover,.side-nav a.active{color:var(--accent);border-left-color:var(--accent)}
+@media(max-width:1200px){.side-nav{display:none}}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="header">
+<h1>JILGM - STBC Attendance System</h1>
+<div class="version">Documentation v1.0 | July 2026</div>
+<div class="desc">Complete guide for setting up, using, and managing the church attendance tracking system</div>
+</div>
+
+<div class="toc">
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#overview">System Overview</a></li>
+<li><a href="#setup">Initial Setup (One-Time)</a></li>
+<li><a href="#registration">Member Registration Flow</a></li>
+<li><a href="#checkin">Check-In Modes</a></li>
+<li><a href="#members">Member Management</a></li>
+<li><a href="#reports">Reports</a></li>
+<li><a href="#settings">Settings & Configuration</a></li>
+<li><a href="#outreach">Outreach Tracking</a></li>
+<li><a href="#sync">Sync & Offline Usage</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+</div>
+
+<!-- Section 1: Overview -->
+<div class="doc-section" id="overview">
+<h2><span class="num">1</span> System Overview</h2>
+<p>The JILGM-STBC Attendance System is a Progressive Web App (PWA) that enables fast, digital attendance tracking for Sunday services. It runs on any phone or computer with a browser.</p>
+
+<h3>How It Works (End-to-End)</h3>
+<div class="inline-flow">
+<span>Printed QR Poster</span><span class="arrow">&#10132;</span>
+<span>Member Scans & Registers</span><span class="arrow">&#10132;</span>
+<span>Personal QR Emailed</span><span class="arrow">&#10132;</span>
+<span>Usher Scans on Sunday</span><span class="arrow">&#10132;</span>
+<span>Report Auto-Generated</span>
+</div>
+
+<h3>System Components</h3>
+<table class="doc-table">
+<tr><th>Component</th><th>Purpose</th><th>Where</th></tr>
+<tr><td>Attendance App (PWA)</td><td>Check-in interface used by ushers</td><td>GitHub Pages (online)</td></tr>
+<tr><td>Google Form</td><td>Member registration form</td><td>Google Forms</td></tr>
+<tr><td>Google Sheets</td><td>Database (members, attendance, reports)</td><td>Church Google account</td></tr>
+<tr><td>Google Apps Script</td><td>Backend automation (QR emails, sync API)</td><td>Church Google account</td></tr>
+</table>
+
+<div class="tip important">
+<span class="tip-icon">&#128161;</span>
+<span class="tip-text"><strong>Zero cost.</strong> All components use free Google services and free GitHub hosting. No subscriptions or servers needed.</span>
+</div>
+</div>
+
+<!-- Section 2: Setup -->
+<div class="doc-section page-break" id="setup">
+<h2><span class="num">2</span> Initial Setup (One-Time)</h2>
+<p>This setup only needs to be done once. After this, the system runs automatically.</p>
+
+<h3>A. Install the App on Usher Phones</h3>
+<div class="steps">
+<div class="step"><div class="step-num">1</div><div class="step-content"><strong>Open the app URL in Chrome</strong><span>Open Chrome on your phone and navigate to the app URL provided by the admin.</span></div></div>
+<div class="step"><div class="step-num">2</div><div class="step-content"><strong>Install as app</strong><span>Tap the three-dot menu (top right) and select "Install app" or "Add to Home Screen." The app will appear on your home screen with the JILGM logo.</span></div></div>
+<div class="step"><div class="step-num">3</div><div class="step-content"><strong>Configure the sync URL</strong><span>Open the app, go to Settings tab, paste the Google Apps Script URL in the "Script URL" field, and tap "Test Connection." You should see "Connected."</span></div></div>
+<div class="step"><div class="step-num">4</div><div class="step-content"><strong>Sync members</strong><span>Tap "Sync Now" to pull all registered members from the database. You should see "Synced! X members loaded."</span></div></div>
+</div>
+
+<div class="tip">
+<span class="tip-icon">&#9989;</span>
+<span class="tip-text">The Script URL only needs to be entered once per device. It is saved locally and persists across app restarts.</span>
+</div>
+
+<h3>B. Print the Registration QR Code</h3>
+<div class="steps">
+<div class="step"><div class="step-num">1</div><div class="step-content"><strong>Generate QR image</strong><span>Open this URL in a browser to get the QR code image of your registration form. Save the image.</span></div></div>
+<div class="step"><div class="step-num">2</div><div class="step-content"><strong>Print on poster/tarpaulin</strong><span>Print the QR code large enough to scan from a distance. Place it at the church entrance, lobby, or registration area.</span></div></div>
+<div class="step"><div class="step-num">3</div><div class="step-content"><strong>Add instructions</strong><span>Below the QR, add text like: "Scan this QR code to register. You will receive your personal attendance QR via email."</span></div></div>
+</div>
+</div>
+
+<!-- Section 3: Registration -->
+<div class="doc-section page-break" id="registration">
+<h2><span class="num">3</span> Member Registration Flow</h2>
+<p>Members register themselves by scanning the printed QR poster. No usher action required.</p>
+
+<h3>What Members Do</h3>
+<div class="steps">
+<div class="step"><div class="step-num">1</div><div class="step-content"><strong>Scan the QR poster</strong><span>Using their phone camera or any QR scanner app.</span></div></div>
+<div class="step"><div class="step-num">2</div><div class="step-content"><strong>Fill out the Google Form</strong><span>Name, email, phone, birthday, outreach location, ministry, gender, civil status, etc.</span></div></div>
+<div class="step"><div class="step-num">3</div><div class="step-content"><strong>Submit</strong><span>The system automatically registers them and assigns a unique Member ID (e.g., MEM-001).</span></div></div>
+<div class="step"><div class="step-num">4</div><div class="step-content"><strong>Receive personal QR via email</strong><span>Within seconds, the member receives an email with their personal QR code image. This is what they show to ushers on Sunday.</span></div></div>
+</div>
+
+<h3>What Happens Behind the Scenes</h3>
+<table class="doc-table">
+<tr><th>Action</th><th>Automated By</th></tr>
+<tr><td>Form response saved to Members sheet</td><td>Google Apps Script (onFormSubmit trigger)</td></tr>
+<tr><td>Unique Member ID generated (MEM-XXX)</td><td>Google Apps Script</td></tr>
+<tr><td>QR code image generated</td><td>QR Code API</td></tr>
+<tr><td>QR saved to Google Drive</td><td>Google Apps Script</td></tr>
+<tr><td>Email sent with QR attachment</td><td>Google Apps Script (GmailApp)</td></tr>
+<tr><td>Member appears on usher app (within 60s)</td><td>Auto-sync</td></tr>
+</table>
+
+<div class="tip warning">
+<span class="tip-icon">&#9888;</span>
+<span class="tip-text"><strong>Email required.</strong> Members must provide a valid email address to receive their QR code. If they don't have email, an usher can manually add them via the app and show them their QR from the Member Detail screen.</span>
+</div>
+</div>
+
+<!-- Section 4: Check-In -->
+<div class="doc-section page-break" id="checkin">
+<h2><span class="num">4</span> Check-In Modes</h2>
+<p>The app offers 4 ways to check in members. Use whichever is fastest for your situation.</p>
+
+<h3>Mode 1: QR Scan</h3>
+<p>The primary check-in method. Members show their personal QR code (from email or saved screenshot), and the usher scans it with the app.</p>
+<table class="doc-table">
+<tr><th>Feature</th><th>Detail</th></tr>
+<tr><td>Camera</td><td>Front and back camera supported (tap "Flip Camera" to switch)</td></tr>
+<tr><td>Speed</td><td>Scans in under 1 second</td></tr>
+<tr><td>Feedback</td><td>Green overlay with "Welcome, [Name]!" + audio beep</td></tr>
+<tr><td>Duplicates</td><td>If already checked in, shows warning "already checked in"</td></tr>
+<tr><td>Unknown QR</td><td>If QR doesn't match any member, shows "Member not found"</td></tr>
+</table>
+
+<h3>Mode 2: Quick Tap</h3>
+<p>A visual grid of all member avatars. Tap once to check in.</p>
+<table class="doc-table">
+<tr><th>Feature</th><th>Detail</th></tr>
+<tr><td>Display</td><td>Circular avatars with initials (or photo if uploaded)</td></tr>
+<tr><td>Visual cues</td><td>Green ring = already checked in. Orange "N" badge = new/returning member.</td></tr>
+<tr><td>Filters</td><td>Filter by ministry. Toggle "All" vs "Not Here" (show only unchecked).</td></tr>
+<tr><td>Best for</td><td>Small-to-medium congregations where ushers know members by face</td></tr>
+</table>
+
+<h3>Mode 3: Search</h3>
+<p>Type a member's name to find and check them in.</p>
+<table class="doc-table">
+<tr><th>Feature</th><th>Detail</th></tr>
+<tr><td>Search</td><td>Live search as you type (shows first 10 matches)</td></tr>
+<tr><td>Already here</td><td>Shows "Already here" label next to checked-in members</td></tr>
+<tr><td>Best for</td><td>When member forgot their QR and you need to find them by name</td></tr>
+</table>
+
+<h3>Mode 4: Visitor (Walk-in)</h3>
+<p>For first-time guests who haven't registered yet.</p>
+<table class="doc-table">
+<tr><th>Feature</th><th>Detail</th></tr>
+<tr><td>Access</td><td>Tap "New Visitor" card in Search mode</td></tr>
+<tr><td>Fields</td><td>Name (required), Phone (optional), Notes (optional)</td></tr>
+<tr><td>Result</td><td>Visitor is added as a member AND checked in simultaneously</td></tr>
+<tr><td>Follow-up</td><td>They can complete full registration via the form later</td></tr>
+</table>
+
+<div class="tip">
+<span class="tip-icon">&#128161;</span>
+<span class="tip-text"><strong>Recommendation:</strong> Use QR Scan as primary mode for speed. Use Quick Tap for members who forgot their QR. Use Search as a fallback. Use Visitor for walk-ins.</span>
+</div>
+</div>
+
+<!-- Section 5: Members -->
+<div class="doc-section page-break" id="members">
+<h2><span class="num">5</span> Member Management</h2>
+<p>The Members tab provides full access to view, add, edit, and manage all members.</p>
+
+<h3>Member List</h3>
+<p>The list shows all members with their avatar, name, outreach, ministry, and status badge.</p>
+<h4>Filters Available</h4>
+<table class="doc-table">
+<tr><th>Filter</th><th>Options</th></tr>
+<tr><td>Status</td><td>All / Active / Inactive</td></tr>
+<tr><td>Ministry</td><td>Any ministry from the configured list</td></tr>
+<tr><td>Outreach</td><td>Sto. Tomas / Tanauan / Naujan / Socorro</td></tr>
+<tr><td>Search</td><td>Live name search</td></tr>
+</table>
+
+<h3>Adding a Member Manually</h3>
+<p>Tap the + button (FAB) on the Members tab. Fill in the form fields:</p>
+<table class="doc-table">
+<tr><th>Field</th><th>Required</th><th>Notes</th></tr>
+<tr><td>Full Name</td><td>Yes</td><td></td></tr>
+<tr><td>Outreach</td><td>No</td><td>Defaults to Sto. Tomas</td></tr>
+<tr><td>Email</td><td>No</td><td>Needed for QR email</td></tr>
+<tr><td>Phone</td><td>No</td><td></td></tr>
+<tr><td>Birthday</td><td>No</td><td>Used for age group calculation</td></tr>
+<tr><td>Gender</td><td>No</td><td>Used for Mothers/Fathers grouping</td></tr>
+<tr><td>Civil Status</td><td>No</td><td>Single/Married/Widow/Separated</td></tr>
+<tr><td>Has Children</td><td>No</td><td>Affects age group (Mothers/Fathers vs YPro)</td></tr>
+<tr><td>Ministry</td><td>No</td><td>Select from configured list</td></tr>
+<tr><td>Membership Status</td><td>No</td><td>First Time Guest / Regular / Returning</td></tr>
+<tr><td>D-Group Leader</td><td>No</td><td></td></tr>
+<tr><td>Emergency Contact</td><td>No</td><td>Name + phone number</td></tr>
+<tr><td>Classes Attended</td><td>No</td><td>Checkboxes: 101, 102, 201, 301, 401, SOP 1, SOP 2, SOW, PCS</td></tr>
+</table>
+
+<h3>Member Detail Panel</h3>
+<p>Tap any member in the list to open their full profile. Shows:</p>
+<ul style="padding-left:20px;margin:12px 0;display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:13px">
+<li>Avatar (photo or colored initials)</li>
+<li>Contact info (phone, address, email)</li>
+<li>Birthday and computed age</li>
+<li>Age group classification</li>
+<li>Last 10 Sundays attendance trail (green dots = present, gray = absent)</li>
+<li>Personal QR code display</li>
+<li>Action buttons: Edit, Show QR, Resend QR, Delete</li>
+</ul>
+
+<h3>Membership Status Pipeline</h3>
+<div class="inline-flow">
+<span class="badge badge-orange">First Time Guest</span><span class="arrow">&#10132;</span>
+<span class="badge badge-purple">Returning Guest</span><span class="arrow">&#10132;</span>
+<span class="badge badge-green">Regular Attendee</span>
+</div>
+<p style="margin-top:8px">Transitions are automatic: after 4 check-ins, a member graduates to Regular Attendee. If a Regular becomes inactive and returns, they become Returning Guest until they attend 4 more times.</p>
+</div>
+
+<!-- Section 6: Reports -->
+<div class="doc-section page-break" id="reports">
+<h2><span class="num">6</span> Reports</h2>
+<p>The Reports tab shows today's attendance statistics and enables report generation.</p>
+
+<h3>Dashboard Stats</h3>
+<table class="doc-table">
+<tr><th>Card</th><th>Shows</th></tr>
+<tr><td>Checked In Today</td><td>Number of members checked in for today's service</td></tr>
+<tr><td>Total Active Members</td><td>All members with "Active" status</td></tr>
+<tr><td>Children Today</td><td>Manually entered children count</td></tr>
+<tr><td>Visitors This Month</td><td>Members registered in the current calendar month</td></tr>
+<tr><td>Weekly Average</td><td>Average attendance over the last 8 Sundays</td></tr>
+</table>
+
+<h3>Weekly Bar Chart</h3>
+<p>Visual chart showing attendance for the last 8 Sundays. Animated bars with count labels.</p>
+
+<h3>Ministry Breakdown</h3>
+<p>Shows present/total for each ministry with progress bars. Sorted by total members. Includes "(unassigned)" for members without a ministry.</p>
+
+<h3>Follow-Up List</h3>
+<p>Automatically identifies active members absent for 3 or more consecutive Sundays. These members may need pastoral follow-up.</p>
+
+<h3>Generate & Send Report</h3>
+<p>Tap "Generate Report" to create a formatted breakdown:</p>
+<table class="doc-table">
+<tr><th>Category</th><th>Logic</th></tr>
+<tr><td>Youth</td><td>Age 13-17 (Sto. Tomas only)</td></tr>
+<tr><td>YPro</td><td>Age 18+ AND single AND no children (Sto. Tomas only)</td></tr>
+<tr><td>Mothers</td><td>Female AND (married/widow/separated OR has children) (Sto. Tomas only)</td></tr>
+<tr><td>Fathers</td><td>Male AND (married/widow/separated OR has children) (Sto. Tomas only)</td></tr>
+<tr><td>Children</td><td>Manually entered count</td></tr>
+<tr><td>Outreach groups</td><td>Separate count per location (Tanauan, Naujan, Socorro)</td></tr>
+<tr><td>New</td><td>First Time Guests from Sto. Tomas only</td></tr>
+<tr><td>Grand Total</td><td>Adults + Children + Outreach totals</td></tr>
+</table>
+
+<p>Tap "Send Now" to email the report to the configured Report Email address. The report is also logged in the Google Sheet "Reports" tab.</p>
+</div>
+
+<!-- Section 7: Settings -->
+<div class="doc-section page-break" id="settings">
+<h2><span class="num">7</span> Settings & Configuration</h2>
+
+<h3>Connection</h3>
+<table class="doc-table">
+<tr><th>Field</th><th>Purpose</th></tr>
+<tr><td>Script URL</td><td>The Google Apps Script Web App URL. Required for sync to work. Locked after saving (tap "Edit URL" to change).</td></tr>
+<tr><td>Test Connection</td><td>Pings the backend. Shows "Connected" or "Failed."</td></tr>
+</table>
+
+<h3>Report Settings</h3>
+<table class="doc-table">
+<tr><th>Field</th><th>Purpose</th></tr>
+<tr><td>Report Email</td><td>Email address where reports are sent (e.g., pastor's email)</td></tr>
+<tr><td>Default Outreach Location</td><td>Pre-fills the outreach field in reports (default: "STBC")</td></tr>
+</table>
+
+<h3>Sync</h3>
+<table class="doc-table">
+<tr><th>Field</th><th>Purpose</th></tr>
+<tr><td>Last Synced</td><td>Shows when the last successful sync occurred</td></tr>
+<tr><td>Pending Changes</td><td>Number of offline check-ins waiting to be uploaded</td></tr>
+<tr><td>Sync Now</td><td>Manually triggers push (upload pending) + pull (download members)</td></tr>
+</table>
+
+<h3>Data Management</h3>
+<table class="doc-table">
+<tr><th>Action</th><th>What It Does</th></tr>
+<tr><td>Import CSV</td><td>Bulk-import members from a CSV file</td></tr>
+<tr><td>Export CSV</td><td>Download all members as a CSV file</td></tr>
+<tr><td>Load Demo Data</td><td>Loads 20 sample members + 8 weeks of fake attendance (for testing only)</td></tr>
+</table>
+
+<h3>Ministry Management</h3>
+<p>View, add, or remove ministries from the configured list. Changes apply to all dropdowns (filters, member form, Quick Tap filter).</p>
+<h4>Default Ministries</h4>
+<p style="font-size:12px;color:var(--text-secondary)">Abraham, Admin, Children, Dance, Engineering, Evangelism, Finance, Kitchen, Media Arts, Prayer, Social Concern, Well Watered Women (W3), Worship, Young Professional, Youth</p>
+</div>
+
+<!-- Section 8: Outreach -->
+<div class="doc-section page-break" id="outreach">
+<h2><span class="num">8</span> Outreach Tracking</h2>
+<p>The system supports tracking members from multiple outreach locations with different attendance rules.</p>
+
+<h3>Supported Locations</h3>
+<table class="doc-table">
+<tr><th>Location</th><th>Service Schedule</th><th>Inactivity Rule</th></tr>
+<tr><td>Sto. Tomas (Main)</td><td>Every Sunday</td><td>Inactive after 8 consecutive Sundays absent</td></tr>
+<tr><td>Tanauan</td><td>1st Sunday of month</td><td>Inactive after 8 consecutive 1st Sundays absent (~8 months)</td></tr>
+<tr><td>Naujan</td><td>Varies</td><td>No auto-inactive (grace for remote area)</td></tr>
+<tr><td>Socorro</td><td>Varies</td><td>No auto-inactive (grace for remote area)</td></tr>
+</table>
+
+<h3>How Outreach Affects Reports</h3>
+<ul style="padding-left:20px;margin:12px 0;display:flex;flex-direction:column;gap:8px;color:var(--text-secondary);font-size:13px">
+<li><strong>Sto. Tomas members</strong> are counted in the age bracket breakdown (Youth, YPro, Mothers, Fathers)</li>
+<li><strong>Other outreach members</strong> (Tanauan, Naujan, Socorro) appear as separate line items in the report, NOT counted in age brackets</li>
+<li><strong>"New" count</strong> only includes First Time Guests from Sto. Tomas. First-timers from other outreaches show under their outreach line.</li>
+</ul>
+</div>
+
+<!-- Section 9: Sync -->
+<div class="doc-section page-break" id="sync">
+<h2><span class="num">9</span> Sync & Offline Usage</h2>
+
+<h3>Auto-Sync (Background)</h3>
+<p>Every 60 seconds, the app silently:</p>
+<ul style="padding-left:20px;margin:12px 0;display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:13px">
+<li>Pushes any pending offline check-ins to Google Sheets</li>
+<li>Pulls today's attendance (from other usher devices)</li>
+<li>Pulls new members (registered via form)</li>
+</ul>
+<p>No toast or popup appears. This is completely silent.</p>
+
+<h3>Manual Sync</h3>
+<p>Tap "Sync Now" in Settings to force an immediate sync. Shows a toast with results.</p>
+
+<h3>Offline Mode</h3>
+<p>If internet is unavailable (e.g., poor signal at church):</p>
+<ul style="padding-left:20px;margin:12px 0;display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:13px">
+<li>All check-in modes still work normally</li>
+<li>Check-ins are saved locally in IndexedDB</li>
+<li>A "Pending Changes" counter shows how many are queued</li>
+<li>When internet returns, auto-sync uploads everything</li>
+</ul>
+
+<div class="tip">
+<span class="tip-icon">&#9989;</span>
+<span class="tip-text"><strong>Multi-device:</strong> Multiple ushers can check in simultaneously on different phones. All data merges correctly via the backend. No conflicts or duplicates.</span>
+</div>
+
+<h3>PWA Installation</h3>
+<p>Once installed as a PWA ("Add to Home Screen"), the app:</p>
+<ul style="padding-left:20px;margin:12px 0;display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:13px">
+<li>Opens fullscreen (no browser bar)</li>
+<li>Has its own home screen icon with JILGM logo</li>
+<li>Works offline (cached by service worker)</li>
+<li>Appears in app switcher like a native app</li>
+</ul>
+</div>
+
+<!-- Section 10: Troubleshooting -->
+<div class="doc-section page-break" id="troubleshooting">
+<h2><span class="num">10</span> Troubleshooting</h2>
+
+<table class="doc-table">
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>"No sync URL configured"</td><td>Go to Settings, paste the Script URL, and tap Save.</td></tr>
+<tr><td>Sync shows 0 members</td><td>The Script URL may be outdated. Ask admin to check if the Web App was redeployed as a new version.</td></tr>
+<tr><td>Camera not working (QR Scan)</td><td>The app needs HTTPS to access the camera. Make sure you're using the online URL (not a local file). Also check browser camera permissions.</td></tr>
+<tr><td>Member not found on scan</td><td>The member may not be synced yet. Tap Sync Now, then try again. Or use Quick Tap / Search mode.</td></tr>
+<tr><td>App opens in browser (not standalone)</td><td>Uninstall the shortcut, revisit the URL, and re-install. May need to open twice for the service worker to activate.</td></tr>
+<tr><td>Toast notification sticks on screen</td><td>Pull down to refresh the page. This is a rare caching issue that resolves after the next app update.</td></tr>
+<tr><td>Report email not received</td><td>Check the Report Email field in Settings. Also check spam folder. Ensure the Script URL is connected.</td></tr>
+<tr><td>Member registered but not appearing</td><td>Wait 60 seconds for auto-sync, or tap Sync Now manually.</td></tr>
+<tr><td>QR email not received by member</td><td>Check if the email field was filled correctly in the form. Open the member's detail in the app and tap "Resend QR."</td></tr>
+<tr><td>Internet lost during service</td><td>No problem. Continue checking in normally. All data is saved locally and syncs when internet returns.</td></tr>
+</table>
+
+<div class="tip warning">
+<span class="tip-icon">&#9888;</span>
+<span class="tip-text"><strong>If all else fails:</strong> Clear the app's site data in Chrome settings, reopen the URL, re-enter the Script URL, and Sync Now. This resets the local cache while preserving all server-side data.</span>
+</div>
+</div>
+
+<div class="doc-footer">
+<p>JILGM - STBC Attendance System | Documentation v1.0 | July 2026</p>
+<p style="margin-top:8px">Prepared by Media Arts Ministry</p>
+</div>
+
+</div>
+</body>
+</html>

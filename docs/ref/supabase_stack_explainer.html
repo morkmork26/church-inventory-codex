@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlockTrack vs Supabase Stack - Developer Mental Model</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;line-height:1.6;padding:2rem}
+.container{max-width:1200px;margin:0 auto}
+h1{text-align:center;font-size:2.2rem;margin-bottom:.5rem;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{text-align:center;color:#94a3b8;margin-bottom:2.5rem;font-size:1.1rem}
+.section{background:#1e2030;border-radius:12px;padding:1.8rem;margin-bottom:1.5rem;border:1px solid #2d3148;transition:border-color .3s}
+.section:hover{border-color:#60a5fa44}
+.section h2{font-size:1.4rem;margin-bottom:1rem;color:#60a5fa;display:flex;align-items:center;gap:.5rem}
+.section h2 .num{background:#60a5fa22;border:1px solid #60a5fa55;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin:1rem 0}
+.compare-box{background:#161827;border-radius:10px;padding:1.2rem;border:1px solid #2d3148}
+.compare-box h3{font-size:1rem;margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem}
+.compare-box.old h3{color:#fbbf24}
+.compare-box.new h3{color:#34d399}
+.compare-box ul{list-style:none;padding-left:0}
+.compare-box li{padding:.4rem 0;padding-left:1.2rem;position:relative;font-size:.9rem;color:#cbd5e1}
+.compare-box li::before{content:'›';position:absolute;left:0;color:#64748b;font-weight:bold}
+.mapping-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}
+.mapping-table th{background:#60a5fa15;color:#60a5fa;padding:.7rem 1rem;text-align:left;border-bottom:1px solid #2d3148}
+.mapping-table td{padding:.7rem 1rem;border-bottom:1px solid #1a1d2e}
+.mapping-table tr:hover td{background:#ffffff06}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:600;margin-left:.5rem}
+.tag-fe{background:#3b82f622;color:#60a5fa;border:1px solid #3b82f644}
+.tag-be{background:#8b5cf622;color:#a78bfa;border:1px solid #8b5cf644}
+.tag-db{background:#10b98122;color:#34d399;border:1px solid #10b98144}
+.tag-auth{background:#f59e0b22;color:#fbbf24;border:1px solid #f59e0b44}
+.flow-diagram{background:#161827;border-radius:10px;padding:1.5rem;margin:1rem 0;overflow-x:auto}
+.flow-diagram pre{font-family:'Cascadia Code','Fira Code',monospace;font-size:.82rem;color:#94a3b8;line-height:1.8}
+.flow-diagram .highlight{color:#60a5fa}
+.flow-diagram .green{color:#34d399}
+.flow-diagram .yellow{color:#fbbf24}
+.flow-diagram .purple{color:#a78bfa}
+.insight{background:linear-gradient(135deg,#1e2030,#1a1d2e);border-left:3px solid #f59e0b;padding:1rem 1.2rem;margin:1rem 0;border-radius:0 8px 8px 0;font-size:.9rem;color:#fde68a}
+.file-tree{background:#161827;border-radius:8px;padding:1rem 1.5rem;font-family:'Cascadia Code',monospace;font-size:.82rem;color:#94a3b8;line-height:1.9}
+.file-tree .folder{color:#60a5fa}
+.file-tree .file{color:#cbd5e1}
+.file-tree .comment{color:#64748b;font-style:italic}
+.stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:1rem 0}
+.stage-card{background:#161827;border-radius:10px;padding:1.2rem;border:1px solid #2d3148;position:relative;overflow:hidden}
+.stage-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stage-card.s1::before{background:#f59e0b}
+.stage-card.s2::before{background:#3b82f6}
+.stage-card.s3::before{background:#8b5cf6}
+.stage-card.s4::before{background:#10b981}
+.stage-card.s5::before{background:#ef4444}
+.stage-card h4{font-size:.95rem;margin-bottom:.5rem;color:#e2e8f0}
+.stage-card p{font-size:.82rem;color:#94a3b8}
+.stage-card .equiv{font-size:.75rem;color:#64748b;margin-top:.5rem;border-top:1px solid #2d3148;padding-top:.5rem}
+details{margin:.8rem 0}
+details summary{cursor:pointer;color:#60a5fa;font-weight:600;padding:.5rem 0;font-size:.95rem}
+details summary:hover{color:#93c5fd}
+details[open] summary{margin-bottom:.5rem}
+.concept-box{background:#161827;border-radius:8px;padding:1.2rem;margin:.5rem 0;border:1px solid #2d3148}
+.concept-box h4{color:#a78bfa;margin-bottom:.5rem;font-size:.9rem}
+.concept-box p{font-size:.85rem;color:#94a3b8}
+@media(max-width:768px){.compare-grid{grid-template-columns:1fr}.stages{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>From FlockTrack to Supabase Stack</h1>
+<p class="subtitle">A mental model for tracking what's happening at every layer</p>
+
+<!-- SECTION 1: The Big Picture -->
+<div class="section">
+<h2><span class="num">1</span> The Big Picture: Same Sandwich, Different Bread</h2>
+<p style="color:#94a3b8;margin-bottom:1rem">Every web app is just 3 layers. You already know them. The tools just changed.</p>
+<div class="compare-grid">
+<div class="compare-box old">
+<h3>🟡 FlockTrack (What You Know)</h3>
+<ul>
+<li><strong>Frontend:</strong> HTML/CSS/JS files served by Apps Script</li>
+<li><strong>Backend:</strong> Google Apps Script (.gs files)</li>
+<li><strong>Database:</strong> Google Sheets (rows = records)</li>
+<li><strong>Auth:</strong> Google account (automatic)</li>
+<li><strong>Hosting:</strong> Google deploys it for you</li>
+</ul>
+</div>
+<div class="compare-box new">
+<h3>🟢 Church Inventory (Supabase Stack)</h3>
+<ul>
+<li><strong>Frontend:</strong> React components (Next.js pages)</li>
+<li><strong>Backend:</strong> Next.js API routes + Supabase client calls</li>
+<li><strong>Database:</strong> PostgreSQL (real SQL tables in Supabase)</li>
+<li><strong>Auth:</strong> Supabase Auth (email/password, managed for you)</li>
+<li><strong>Hosting:</strong> Vercel (auto-deploys from GitHub)</li>
+</ul>
+</div>
+</div>
+<div class="insight">💡 Key insight: In FlockTrack, Google handled everything invisibly. In the Supabase stack, each layer is a separate service you can see and control. More power, but more pieces to track.</div>
+</div>
+
+<!-- SECTION 2: Direct Mapping -->
+<div class="section">
+<h2><span class="num">2</span> Direct 1:1 Mapping</h2>
+<table class="mapping-table">
+<tr><th>FlockTrack Concept</th><th>Supabase Stack Equivalent</th><th>Layer</th></tr>
+<tr><td>Google Sheet (the spreadsheet)</td><td>Supabase PostgreSQL database</td><td><span class="tag tag-db">DB</span></td></tr>
+<tr><td>Sheet tabs (e.g. "Members", "Attendance")</td><td>SQL Tables (e.g. <code>ministries</code>, <code>inventory_items</code>)</td><td><span class="tag tag-db">DB</span></td></tr>
+<tr><td>Column headers (Name, Date, Status)</td><td>Table columns with types (text, uuid, timestamptz)</td><td><span class="tag tag-db">DB</span></td></tr>
+<tr><td>Sheet formulas / data validation</td><td>SQL constraints, ENUMs, triggers</td><td><span class="tag tag-db">DB</span></td></tr>
+<tr><td><code>SpreadsheetApp.getRange().getValues()</code></td><td><code>supabase.from('table').select('*')</code></td><td><span class="tag tag-be">BE</span></td></tr>
+<tr><td><code>sheet.appendRow([...])</code></td><td><code>supabase.from('table').insert({...})</code></td><td><span class="tag tag-be">BE</span></td></tr>
+<tr><td><code>doGet() / doPost()</code></td><td>Next.js API route (<code>src/app/api/...</code>)</td><td><span class="tag tag-be">BE</span></td></tr>
+<tr><td>HTML files in Apps Script</td><td>React components (<code>.tsx</code> files)</td><td><span class="tag tag-fe">FE</span></td></tr>
+<tr><td><code>google.script.run.myFunction()</code></td><td>fetch to API route, or direct Supabase client call</td><td><span class="tag tag-fe">FE</span></td></tr>
+<tr><td>Google login (automatic)</td><td>Supabase Auth (login/register pages you build)</td><td><span class="tag tag-auth">AUTH</span></td></tr>
+<tr><td>Apps Script deploy URL</td><td>Vercel deployment URL</td><td><span class="tag tag-fe">FE</span></td></tr>
+</table>
+</div>
+
+<!-- SECTION 3: Where Things Live -->
+<div class="section">
+<h2><span class="num">3</span> Where Things Live (File Structure)</h2>
+<div class="file-tree">
+<span class="folder">church-inventory/</span><br>
+├── <span class="folder">src/app/(auth)/</span> <span class="comment">← Login & register pages</span><br>
+├── <span class="folder">src/app/(dashboard)/</span> <span class="comment">← All the actual app pages</span><br>
+│   ├── <span class="folder">inventory/</span> <span class="comment">← Inventory CRUD pages</span><br>
+│   ├── <span class="folder">ministries/</span> <span class="comment">← Ministry management</span><br>
+│   ├── <span class="folder">repairs/</span> <span class="comment">← Repair tracking</span><br>
+│   ├── <span class="folder">requests/</span> <span class="comment">← Item request workflow</span><br>
+│   └── <span class="file">page.tsx</span> <span class="comment">← Dashboard home</span><br>
+├── <span class="folder">src/app/api/</span> <span class="comment">← Backend endpoints (like doGet/doPost)</span><br>
+├── <span class="folder">src/components/</span> <span class="comment">← Reusable UI pieces</span><br>
+├── <span class="folder">src/lib/supabase/</span> <span class="comment">← Database connection setup</span><br>
+│   ├── <span class="file">client.ts</span> <span class="comment">← Browser-side DB connection</span><br>
+│   └── <span class="file">server.ts</span> <span class="comment">← Server-side DB connection</span><br>
+└── <span class="folder">supabase/migrations/</span> <span class="comment">← SQL that creates your tables (like setting up Sheet structure)</span><br>
+</div>
+<div class="insight">💡 In FlockTrack, your "database schema" was just opening a Sheet and typing column headers. Here, you write SQL once in a migration file, and it creates the structure permanently.</div>
+</div>
+
+<!-- SECTION 4: The Data Flow -->
+<div class="section">
+<h2><span class="num">4</span> How Data Flows (Side by Side)</h2>
+
+<p style="color:#94a3b8;margin-bottom:1rem"><strong>Example:</strong> User adds a new inventory item</p>
+<div class="compare-grid">
+<div class="compare-box old">
+<h3>🟡 FlockTrack Way</h3>
+<ul>
+<li>User fills HTML form</li>
+<li>JS calls <code>google.script.run.addItem(data)</code></li>
+<li><code>addItem()</code> in Code.gs runs</li>
+<li>It does <code>sheet.appendRow([name, qty, ...])</code></li>
+<li>Row added to Sheet</li>
+<li>Callback updates the HTML</li>
+</ul>
+</div>
+<div class="compare-box new">
+<h3>🟢 Supabase Way</h3>
+<ul>
+<li>User fills React form component</li>
+<li>Component calls <code>supabase.from('inventory_items').insert({...})</code></li>
+<li>Supabase receives the request</li>
+<li>PostgreSQL inserts the row</li>
+<li>Response comes back with the new row</li>
+<li>React re-renders the list</li>
+</ul>
+</div>
+</div>
+<div class="flow-diagram"><pre>
+<span class="yellow">FlockTrack:</span>
+  [HTML Form] → <span class="highlight">google.script.run</span> → [Code.gs] → <span class="green">Sheet.appendRow()</span> → [Google Sheet]
+
+<span class="green">Supabase Stack:</span>
+  [React Form] → <span class="highlight">supabase.from().insert()</span> → [Supabase API] → <span class="purple">PostgreSQL INSERT</span> → [Database]
+
+<span class="yellow">Reading data:</span>
+  FlockTrack:  sheet.getRange().getValues() → returns 2D array [[row1], [row2]]
+  Supabase:    supabase.from('table').select() → returns array of objects [{id, name, ...}]
+</pre></div>
+</div>
+
+<!-- SECTION 5: Key Concepts -->
+<div class="section">
+<h2><span class="num">5</span> New Concepts You Need (That FlockTrack Hid From You)</h2>
+
+<details open>
+<summary>🔑 Authentication & Sessions</summary>
+<div class="concept-box">
+<h4>FlockTrack: Google handled it. User was already logged into Google.</h4>
+<p>Supabase: YOU manage auth. Supabase gives you functions like <code>supabase.auth.signUp()</code>, <code>signInWithPassword()</code>, <code>getUser()</code>. A session token (JWT) is stored in cookies. The <code>middleware.ts</code> file checks this token on every page load to decide if user is logged in.</p>
+<p style="margin-top:.5rem"><strong>Your file:</strong> <code>src/middleware.ts</code> = the bouncer at the door. <code>src/lib/supabase/server.ts</code> = how the server knows who's asking.</p>
+</div>
+</details>
+
+<details>
+<summary>🗃️ Migrations (Database Schema Versioning)</summary>
+<div class="concept-box">
+<h4>FlockTrack: You just added a column to the Sheet manually.</h4>
+<p>Supabase: You write a <code>.sql</code> file that says "CREATE TABLE..." and it runs once. If you need to change the schema later, you write another migration file. This keeps a history of all database changes (like git for your DB structure).</p>
+<p style="margin-top:.5rem"><strong>Your file:</strong> <code>supabase/migrations/001_initial_schema.sql</code> = this created ALL your tables, enums, and relationships.</p>
+</div>
+</details>
+
+<details>
+<summary>📡 Client vs Server (Two Ways to Talk to DB)</summary>
+<div class="concept-box">
+<h4>FlockTrack: Everything went through Code.gs (server only).</h4>
+<p>Supabase: You have TWO connection modes:</p>
+<ul style="margin:.5rem 0 0 1rem;color:#94a3b8;font-size:.85rem">
+<li><strong>client.ts</strong> (browser-side): Used in React components. Limited by Row Level Security (RLS) policies. User can only see/edit what policies allow.</li>
+<li><strong>server.ts</strong> (server-side): Used in API routes and server components. Has the user's session from cookies. Can do privileged operations.</li>
+</ul>
+<p style="margin-top:.5rem">Think of it as: client.ts = the user doing things directly. server.ts = your Code.gs doing things on behalf of the user.</p>
+</div>
+</details>
+
+<details>
+<summary>🛡️ Row Level Security (RLS)</summary>
+<div class="concept-box">
+<h4>FlockTrack: Anyone with the Sheet link could see everything. You filtered in code.</h4>
+<p>Supabase: The DATABASE itself enforces who can see what. You write policies like "users can only SELECT rows where ministry_id matches their own ministry." Even if someone hacks the frontend, the DB won't give them other people's data.</p>
+<p style="margin-top:.5rem">This is like putting a lock on each Sheet tab that only opens for specific people, enforced by Google itself (not your code).</p>
+</div>
+</details>
+
+<details>
+<summary>⚡ React Query (Data Fetching Layer)</summary>
+<div class="concept-box">
+<h4>FlockTrack: You called google.script.run, waited, then manually updated the HTML.</h4>
+<p>React Query (<code>@tanstack/react-query</code>) automates: loading states, caching, refetching, error handling. You define a query once, and it handles "show spinner while loading", "cache for 5 min", "refetch when tab is focused".</p>
+<p style="margin-top:.5rem">It's like having a smart assistant between your UI and your data calls that handles all the boring stuff.</p>
+</div>
+</details>
+
+<details>
+<summary>🧩 Components (Reusable UI Pieces)</summary>
+<div class="concept-box">
+<h4>FlockTrack: You copy-pasted HTML blocks or used template literals in JS.</h4>
+<p>React: Each UI piece is a function that returns HTML-like code (JSX). A Button, a Table, a Modal are all components. You import and reuse them. Props = parameters you pass in.</p>
+<p style="margin-top:.5rem"><code>&lt;InventoryTable items={data} /&gt;</code> is like calling <code>renderTable(data)</code> in your old code, but it auto-updates when data changes.</p>
+</div>
+</details>
+</div>
+
+<!-- SECTION 6: Development Stages -->
+<div class="section">
+<h2><span class="num">6</span> Development Stages (So You Can Track Progress)</h2>
+<p style="color:#94a3b8;margin-bottom:1rem">Here's how to think about building in stages, same way you tracked FlockTrack:</p>
+<div class="stages">
+<div class="stage-card s1">
+<h4>Stage 1: Database Design</h4>
+<p>Write migration SQL. Define tables, relationships, enums. This is your foundation.</p>
+<div class="equiv">FlockTrack equiv: Creating all your Sheet tabs and column headers</div>
+</div>
+<div class="stage-card s2">
+<h4>Stage 2: Auth Setup</h4>
+<p>Login/register pages, middleware, protected routes. Users can sign up and get sessions.</p>
+<div class="equiv">FlockTrack equiv: Was free (Google login). Now you build it.</div>
+</div>
+<div class="stage-card s3">
+<h4>Stage 3: Core CRUD Pages</h4>
+<p>Build pages that Create, Read, Update, Delete data. One feature at a time (inventory first, then requests, etc).</p>
+<div class="equiv">FlockTrack equiv: Building each HTML page + its Code.gs functions</div>
+</div>
+<div class="stage-card s4">
+<h4>Stage 4: Business Logic</h4>
+<p>Workflows (request approval flow, stock movement tracking, notifications). The "smart" part.</p>
+<div class="equiv">FlockTrack equiv: Your complex .gs functions that moved data between sheets</div>
+</div>
+<div class="stage-card s5">
+<h4>Stage 5: Polish & Deploy</h4>
+<p>Error handling, loading states, mobile responsive, deploy to Vercel.</p>
+<div class="equiv">FlockTrack equiv: Making it look nice + deploying as web app</div>
+</div>
+</div>
+</div>
+
+<!-- SECTION 7: Quick Reference -->
+<div class="section">
+<h2><span class="num">7</span> Quick Command Reference</h2>
+<table class="mapping-table">
+<tr><th>Action</th><th>FlockTrack</th><th>Supabase Stack</th></tr>
+<tr><td>Run locally</td><td>N/A (test in Apps Script editor)</td><td><code>npm run dev</code> → opens localhost:3000</td></tr>
+<tr><td>Deploy</td><td>Deploy > New deployment</td><td><code>git push</code> → Vercel auto-deploys</td></tr>
+<tr><td>See database</td><td>Open the Google Sheet</td><td>Supabase Dashboard > Table Editor</td></tr>
+<tr><td>Add a table</td><td>Add a new Sheet tab</td><td>Write new migration SQL, run <code>supabase db push</code></td></tr>
+<tr><td>Add a page</td><td>Create new HTML file</td><td>Create folder + <code>page.tsx</code> in src/app/</td></tr>
+<tr><td>Debug backend</td><td><code>Logger.log()</code></td><td><code>console.log()</code> in terminal</td></tr>
+<tr><td>Check who's logged in</td><td><code>Session.getActiveUser()</code></td><td><code>supabase.auth.getUser()</code></td></tr>
+</table>
+</div>
+
+<!-- SECTION 8: Your Church Inventory Status -->
+<div class="section">
+<h2><span class="num">8</span> Your Church Inventory: Current Status</h2>
+<div class="stages">
+<div class="stage-card s1" style="border-color:#10b981">
+<h4>✅ Stage 1: Database</h4>
+<p>DONE. Full schema with 6+ tables, enums for status tracking, proper relationships.</p>
+</div>
+<div class="stage-card s2" style="border-color:#10b981">
+<h4>✅ Stage 2: Auth</h4>
+<p>DONE. Login/register pages, middleware, server/client Supabase clients.</p>
+</div>
+<div class="stage-card s3" style="border-color:#f59e0b">
+<h4>🟡 Stage 3: CRUD Pages</h4>
+<p>IN PROGRESS. Dashboard, inventory, ministries, repairs, requests pages exist. Need to verify completeness.</p>
+</div>
+<div class="stage-card s4" style="border-color:#64748b">
+<h4>⬜ Stage 4: Business Logic</h4>
+<p>Approval workflows, stock ledger automation, notifications.</p>
+</div>
+<div class="stage-card s5" style="border-color:#64748b">
+<h4>⬜ Stage 5: Polish</h4>
+<p>Mobile UX, error states, deploy.</p>
+</div>
+</div>
+</div>
+
+</div>
+</body>
+</html>

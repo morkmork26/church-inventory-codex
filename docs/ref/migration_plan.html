@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FlockTrack - Migration Plan</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d0d1a;color:#eaeaea;padding:32px;line-height:1.7}
+.container{max-width:800px;margin:0 auto}
+h1{font-size:28px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#fff 30%,#48c6ef 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{color:#8b8b9e;font-size:14px;margin-bottom:32px}
+.phase{background:#1a1a2e;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.05)}
+.phase-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.phase-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#48c6ef);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.phase-title{font-size:18px;font-weight:700}
+.phase-time{font-size:11px;color:#48c6ef;margin-left:auto;background:rgba(72,198,239,0.1);padding:4px 10px;border-radius:20px}
+.step{padding:8px 0 8px 20px;border-left:2px solid rgba(108,99,255,0.3);margin-left:17px;margin-bottom:4px}
+.step-title{font-weight:600;font-size:14px;color:#fff}
+.step-detail{font-size:13px;color:#8b8b9e;margin-top:4px}
+.step-detail code{background:rgba(108,99,255,0.15);padding:2px 6px;border-radius:4px;font-size:12px;color:#48c6ef}
+.warning{background:rgba(255,171,0,0.08);border:1px solid rgba(255,171,0,0.2);border-radius:12px;padding:16px;margin-bottom:16px}
+.warning-title{font-weight:700;color:#ffab00;font-size:14px;margin-bottom:6px}
+.warning-text{font-size:13px;color:#ccc}
+.note{background:rgba(72,198,239,0.06);border:1px solid rgba(72,198,239,0.15);border-radius:12px;padding:16px;margin-top:24px}
+.note-title{font-weight:700;color:#48c6ef;font-size:14px;margin-bottom:6px}
+.note-text{font-size:13px;color:#aaa}
+.checklist{list-style:none;padding:0;margin-top:12px}
+.checklist li{padding:6px 0;font-size:13px;color:#ccc;display:flex;align-items:flex-start;gap:8px}
+.checklist li::before{content:'';width:16px;height:16px;border-radius:4px;border:1.5px solid rgba(108,99,255,0.4);flex-shrink:0;margin-top:2px}
+.divider{height:1px;background:rgba(255,255,255,0.05);margin:24px 0}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>FlockTrack Migration Plan</h1>
+<p class="subtitle">Account locked out. Full backend migration to new Google account.</p>
+
+<div class="warning">
+<div class="warning-title">What You'll Lose</div>
+<div class="warning-text">All existing data in the old Google Sheet (members, attendance history, device registrations). The app on everyone's phones will need the new script URL entered once. All local data (IndexedDB) on devices remains intact.</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">1</div>
+<div class="phase-title">Create New Google Account</div>
+<div class="phase-time">5 min</div>
+</div>
+<div class="step">
+<div class="step-title">Create a new Gmail</div>
+<div class="step-detail">Suggested: <code>jilgm.stb.app@gmail.com</code> or similar. Use a phone number that hasn't been used for Google verification recently. If no phone available, try creating without phone (some regions allow it).</div>
+</div>
+<div class="step">
+<div class="step-title">Do some human activity first</div>
+<div class="step-detail">Send a few emails, browse YouTube, wait 10-15 min before using for API/script. This prevents the "bot" flag.</div>
+</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">2</div>
+<div class="phase-title">Create New Google Sheet</div>
+<div class="phase-time">10 min</div>
+</div>
+<div class="step">
+<div class="step-title">Create blank spreadsheet</div>
+<div class="step-detail">Name it: <code>FlockTrack - JILGM STB Attendance</code></div>
+</div>
+<div class="step">
+<div class="step-title">Create 5 sheet tabs (exact names):</div>
+<div class="step-detail">
+<code>Members</code> <code>Attendance</code> <code>Visitors</code> <code>Config</code> <code>Devices</code>
+</div>
+</div>
+<div class="step">
+<div class="step-title">Members tab - Row 1 headers (23 columns):</div>
+<div class="step-detail"><code>ID | Name | Outreach | DGroup | DGroupLeader | Ministry | Phone | Address | Birthday | Gender | CivilStatus | HasChildren | EmergencyContact | EmergencyPhone | Email | MembershipStatus | MembershipDate | BaptismDate | BaptismPlace | Classes | QRCodeURL | Status | DateRegistered</code></div>
+</div>
+<div class="step">
+<div class="step-title">Attendance tab - Row 1 headers (6 columns):</div>
+<div class="step-detail"><code>MemberID | MemberName | Date | Timestamp | CheckedInBy | Occasion</code></div>
+</div>
+<div class="step">
+<div class="step-title">Visitors tab - Row 1 headers (4 columns):</div>
+<div class="step-detail"><code>Name | Phone | Date | Notes</code></div>
+</div>
+<div class="step">
+<div class="step-title">Devices tab - Row 1 headers (4 columns):</div>
+<div class="step-detail"><code>DeviceID | DeviceName | Status | RegisteredAt</code></div>
+</div>
+<div class="step">
+<div class="step-title">Config tab - leave empty for now</div>
+<div class="step-detail">App will write to it as needed.</div>
+</div>
+<div class="step">
+<div class="step-title">Copy the Sheet ID from the URL</div>
+<div class="step-detail">URL looks like: <code>https://docs.google.com/spreadsheets/d/<b>THIS_PART</b>/edit</code></div>
+</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">3</div>
+<div class="phase-title">Set Up Apps Script</div>
+<div class="phase-time">5 min</div>
+</div>
+<div class="step">
+<div class="step-title">Open Apps Script editor</div>
+<div class="step-detail">In the Sheet: <code>Extensions > Apps Script</code></div>
+</div>
+<div class="step">
+<div class="step-title">Delete default code, paste entire Code.gs</div>
+<div class="step-detail">Copy from: <code>~/JILGM-Attendance/gas/Code.gs</code> (I'll give you the full text when ready)</div>
+</div>
+<div class="step">
+<div class="step-title">Update SHEET_ID on line 10</div>
+<div class="step-detail">Replace <code>"1WEbBBFh-_GeBNAn-mQ3vMQhkZ4jAHejaFd2YS5ZKP-Y"</code> with your new Sheet ID</div>
+</div>
+<div class="step">
+<div class="step-title">Save (Ctrl+S)</div>
+<div class="step-detail"></div>
+</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">4</div>
+<div class="phase-title">Deploy as Web App</div>
+<div class="phase-time">3 min</div>
+</div>
+<div class="step">
+<div class="step-title">Click Deploy > New deployment</div>
+<div class="step-detail"></div>
+</div>
+<div class="step">
+<div class="step-title">Select type: Web app</div>
+<div class="step-detail"></div>
+</div>
+<div class="step">
+<div class="step-title">Settings:</div>
+<div class="step-detail">
+Execute as: <code>Me</code><br>
+Who has access: <code>Anyone</code><br>
+Description: <code>FlockTrack API v1</code>
+</div>
+</div>
+<div class="step">
+<div class="step-title">Click Deploy, authorize access</div>
+<div class="step-detail">Google will ask to review permissions. Click "Advanced" > "Go to [project] (unsafe)" > Allow. This grants the script access to your Sheets.</div>
+</div>
+<div class="step">
+<div class="step-title">Copy the deployment URL</div>
+<div class="step-detail">Looks like: <code><YOUR_APPS_SCRIPT_URL></code></div>
+</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">5</div>
+<div class="phase-title">Update the App</div>
+<div class="phase-time">2 min</div>
+</div>
+<div class="step">
+<div class="step-title">Open FlockTrack on admin device</div>
+<div class="step-detail"></div>
+</div>
+<div class="step">
+<div class="step-title">Go to Settings > Connection > Edit URL</div>
+<div class="step-detail">Tap "Edit URL" to unlock the field</div>
+</div>
+<div class="step">
+<div class="step-title">Paste new deployment URL > Test Connection</div>
+<div class="step-detail">Should say "Saved! Loading..." and reload with members synced</div>
+</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">6</div>
+<div class="phase-title">Re-register Members</div>
+<div class="phase-time">15-30 min</div>
+</div>
+<div class="step">
+<div class="step-title">Option A: Re-add manually via the app</div>
+<div class="step-detail">Use the + button to add each member. Tedious but clean.</div>
+</div>
+<div class="step">
+<div class="step-title">Option B: Bulk upload via the Sheet directly</div>
+<div class="step-detail">If you have a member list (spreadsheet, text, screenshot), paste directly into the Members tab. Format: one row per member, follow the column headers exactly. ID format: <code>MEM-001</code>, <code>MEM-002</code>, etc.</div>
+</div>
+<div class="step">
+<div class="step-title">Option C: Export from local device</div>
+<div class="step-detail">If the admin device still has members in local IndexedDB (from before lockout), go to Settings > Data > Export CSV. This gives you all members. Paste into the new Sheet.</div>
+</div>
+</div>
+
+<div class="phase">
+<div class="phase-header">
+<div class="phase-num">7</div>
+<div class="phase-title">Update Other Devices</div>
+<div class="phase-time">5 min per device</div>
+</div>
+<div class="step">
+<div class="step-title">Each device needs the new script URL</div>
+<div class="step-detail">Settings > Connection > Edit URL > paste new URL</div>
+</div>
+<div class="step">
+<div class="step-title">Or: clear app data and re-setup</div>
+<div class="step-detail">If device still has old URL cached, clear site data in browser settings for the FlockTrack URL, then re-open and enter new script URL</div>
+</div>
+</div>
+
+<div class="divider"></div>
+
+<div class="note">
+<div class="note-title">Preventing Future Lockouts</div>
+<div class="note-text">
+<ul class="checklist">
+<li>Use the new account occasionally for normal email/browsing (not just API)</li>
+<li>Add a recovery email from a different account</li>
+<li>Enable 2FA once the account is stable (after a few days)</li>
+<li>Consider sharing the Sheet with your personal Gmail as backup editor</li>
+<li>Monthly backups are already built into the script (runs automatically)</li>
+</ul>
+</div>
+</div>
+
+<div class="note" style="margin-top:16px">
+<div class="note-title">What I Can Help With Right Now</div>
+<div class="note-text">
+<ul class="checklist">
+<li>Give you the full Code.gs text ready to paste (with placeholder SHEET_ID)</li>
+<li>Generate the member list if you can export CSV from the app</li>
+<li>Update the PWA to show a "setup required" message if no script URL is configured</li>
+<li>Help create a Google Form linked to the new sheet for member registration</li>
+</ul>
+</div>
+</div>
+
+</div>
+</body>
+</html>

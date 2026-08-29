@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FlockTrack - App Overview & Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Raleway:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f8f9fc;--card:#ffffff;--text:#1a1a2e;--text2:#5a5a6e;--accent:#4f46e5;--accent2:#0ea5e9;--border:rgba(0,0,0,0.06);--radius:16px;--shadow:0 2px 12px rgba(0,0,0,0.06);--glow:0 0 12px rgba(79,70,229,0.12)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.hero{background:linear-gradient(135deg,#4f46e5,#0ea5e9);padding:70px 24px 90px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';display:none}
+@keyframes pulse{0%{opacity:0.5}100%{opacity:1}}
+.hero::after{content:'';position:absolute;bottom:-40px;left:0;right:0;height:80px;background:var(--bg);border-radius:50% 50% 0 0}
+.hero h1{font-family:'Raleway',sans-serif;font-size:48px;color:#fff;margin-bottom:8px;letter-spacing:1px;position:relative}
+.hero h1 .track{color:#a5f3fc}
+.hero .subtitle{color:rgba(255,255,255,0.85);font-size:16px;font-weight:500;position:relative}
+.hero .version{display:inline-block;background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;margin-top:12px;backdrop-filter:blur(4px);position:relative}
+.container{max-width:900px;margin:0 auto;padding:0 24px}
+.section{margin:56px 0}
+.section-title{font-size:22px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.section-title .icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0;box-shadow:var(--glow)}
+.section-desc{color:var(--text2);font-size:14px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);margin-bottom:16px;transition:transform 0.2s,box-shadow 0.2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+.card h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--accent)}
+.card p,.card li{font-size:14px;color:var(--text2);line-height:1.8}
+.card ul{padding-left:18px}
+.card ul li{margin-bottom:6px}
+.card ul li strong{color:var(--text)}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.step{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px}
+.step-num{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;box-shadow:var(--glow)}
+.step-content h4{font-size:15px;font-weight:600;margin-bottom:4px;color:var(--text)}
+.step-content p{font-size:13px;color:var(--text2)}
+.step-content a{color:var(--accent2);font-weight:600;text-decoration:none}
+.step-content a:hover{text-decoration:underline}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-right:6px}
+.tag-blue{background:rgba(79,70,229,0.1);color:var(--accent)}
+.tag-green{background:rgba(22,163,74,0.1);color:#16a34a}
+.tag-orange{background:rgba(217,119,6,0.1);color:#d97706}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.feature-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;box-shadow:var(--shadow);transition:transform 0.2s}
+.feature-item:hover{transform:translateY(-2px)}
+.feature-item .emoji{font-size:28px;margin-bottom:8px}
+.feature-item h4{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--text)}
+.feature-item p{font-size:12px;color:var(--text2)}
+.note-box{background:linear-gradient(135deg,rgba(79,70,229,0.05),rgba(14,165,233,0.05));border:1px solid rgba(79,70,229,0.15);border-radius:12px;padding:16px 20px;margin:16px 0}
+.note-box p{font-size:13px;color:var(--text2)}
+.note-box strong{color:var(--accent)}
+.warning-box{background:rgba(217,119,6,0.05);border:1px solid rgba(217,119,6,0.2);border-radius:12px;padding:16px 20px;margin:16px 0}
+.warning-box p{font-size:13px;color:var(--text2)}
+.warning-box strong{color:#fb923c}
+.footer{text-align:center;padding:40px 24px;color:var(--text2);font-size:12px;border-top:1px solid var(--border);margin-top:60px}
+.footer a{color:var(--accent2);text-decoration:none}
+code{background:rgba(79,70,229,0.08);padding:2px 8px;border-radius:6px;font-size:13px;font-family:'SF Mono',Menlo,monospace;color:var(--accent)}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);margin-top:-40px;position:relative;z-index:2}
+.toc h3{font-size:14px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2)}
+.toc ul{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.toc li a{font-size:14px;color:var(--accent2);text-decoration:none;font-weight:500;transition:color 0.2s}
+.toc li a:hover{color:var(--accent2)}
+.timeline{position:relative;padding-left:36px;border-left:none;margin-left:6px}
+.timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:rgba(79,70,229,0.25)}
+.timeline-item{position:relative;margin-bottom:20px;padding-left:16px}
+.timeline-item::before{content:'';position:absolute;left:-32px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.timeline-item h4{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.timeline-item p{font-size:13px;color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+<h1>Flock<span class="track">Track</span></h1>
+<p class="subtitle">JILGM STB Church Attendance System</p>
+<span class="version">v1.2.0</span>
+</div>
+
+<div class="container">
+
+<div class="toc">
+<h3>Contents</h3>
+<ul>
+<li><a href="#whatis">What is FlockTrack?</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#launch">Launch Day Plan</a></li>
+<li><a href="#member-reg">Member Registration</a></li>
+<li><a href="#qr">QR Codes Explained</a></li>
+<li><a href="#setup">Usher Setup</a></li>
+<li><a href="#tabs">App Tabs</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ul>
+</div>
+
+<!-- WHAT IS -->
+<div class="section" id="whatis">
+<div class="section-title"><div class="icon">&#9775;</div> What is FlockTrack?</div>
+<div class="card">
+<p>FlockTrack is a phone app for <strong>JILGM Sto. Tomas Batangas</strong> that tracks Sunday attendance. It works on any phone or tablet, can be installed like a regular app, and works even without internet. All data goes to Google Sheets.</p>
+<div style="margin-top:12px">
+<span class="tag tag-blue">Works on any phone</span>
+<span class="tag tag-green">Works offline</span>
+<span class="tag tag-orange">Google Sheets backend</span>
+</div>
+</div>
+</div>
+
+<!-- FEATURES -->
+<div class="section" id="features">
+<div class="section-title"><div class="icon">&#9733;</div> Features</div>
+<div class="feature-grid">
+<div class="feature-item"><div class="emoji">&#128247;</div><h4>QR Scan Check-In</h4><p>Scan member QR for instant check-in</p></div>
+<div class="feature-item"><div class="emoji">&#128070;</div><h4>Quick Tap</h4><p>Tap photo grid to check in</p></div>
+<div class="feature-item"><div class="emoji">&#128269;</div><h4>Search</h4><p>Type name to find and check in</p></div>
+<div class="feature-item"><div class="emoji">&#128101;</div><h4>Members</h4><p>Add, edit, filter members</p></div>
+<div class="feature-item"><div class="emoji">&#128202;</div><h4>Reports</h4><p>Trends, charts, follow-ups</p></div>
+<div class="feature-item"><div class="emoji">&#128274;</div><h4>Device Control</h4><p>Admin approves who can use the app</p></div>
+<div class="feature-item"><div class="emoji">&#9889;</div><h4>Offline</h4><p>No internet? Still works</p></div>
+
+<div class="feature-item"><div class="emoji">&#128276;</div><h4>Follow-Up</h4><p>Flags absent 2+ Sundays</p></div>
+<div class="feature-item"><div class="emoji">&#128190;</div><h4>Auto Backup</h4><p>Monthly backup, no action needed</p></div>
+<div class="feature-item"><div class="emoji">&#128100;</div><h4>Self-Register</h4><p>Members register via QR poster</p></div>
+<div class="feature-item"><div class="emoji">&#128203;</div><h4>Duplicate Check</h4><p>Prevents double registrations</p></div>
+</div>
+</div>
+
+<!-- LAUNCH DAY -->
+<div class="section" id="launch">
+<div class="section-title"><div class="icon">&#128640;</div> Launch Day Plan</div>
+<p class="section-desc">What happens on the first Sunday we use FlockTrack.</p>
+
+<div class="timeline">
+<div class="timeline-item">
+<h4>1. Before Sunday</h4>
+<p>Print QR code posters that link to the registration form. Place at entrance, chairs, or project on screen. Have 2-3 ushers with approved devices ready.</p>
+</div>
+<div class="timeline-item">
+<h4>2. Members Arrive</h4>
+<p><strong>New members:</strong> Scan the QR poster with their phone. It opens a form where they register themselves.<br><strong>Known members:</strong> Ushers check them in using Quick Tap or Search mode.</p>
+</div>
+<div class="timeline-item">
+<h4>3. After Service</h4>
+<p>New registrations are automatically processed. If someone accidentally registers twice, the system catches it and flags it for review.</p>
+</div>
+<div class="timeline-item">
+<h4>4. During the Week</h4>
+<p>Upon registration, the member's personal QR code is automatically sent to the email address they provided in the form.</p>
+</div>
+<div class="timeline-item">
+<h4>5. Next Sundays</h4>
+<p>Members show their personal QR on their phone screen. Usher scans it with FlockTrack = instant check-in. Fast and easy.</p>
+</div>
+</div>
+
+<div class="warning-box">
+<p><strong>Tip:</strong> For launch day, Quick Tap and Search modes are the fastest way to check in known members. The QR poster handles new member registration without needing usher help.</p>
+</div>
+</div>
+
+<!-- MEMBER REGISTRATION -->
+<div class="section" id="member-reg">
+<div class="section-title"><div class="icon">&#128221;</div> Member Registration</div>
+<p class="section-desc">Two ways members get into the system.</p>
+
+<div class="grid-2">
+<div class="card">
+<h3>Self-Registration (QR Poster)</h3>
+<ul>
+<li>Member scans QR poster at church</li>
+<li>Google Form opens on their phone</li>
+<li>They fill in Name, Phone, Birthday, etc.</li>
+<li>Submit. Done. No usher needed.</li>
+<li>System checks for duplicates automatically</li>
+</ul>
+</div>
+<div class="card">
+<h3>Manual Add (by Usher)</h3>
+<ul>
+<li>Usher opens Members tab in FlockTrack</li>
+<li>Taps the + button</li>
+<li>Fills in member details</li>
+<li>Good for elderly or those without smartphones</li>
+<li>Also checks for duplicates</li>
+</ul>
+</div>
+</div>
+
+
+</div>
+
+<!-- QR CODES -->
+<div class="section" id="qr">
+<div class="section-title"><div class="icon">&#128247;</div> QR Codes Explained</div>
+<p class="section-desc">There are TWO different QR codes. Don't confuse them.</p>
+
+<div class="grid-2">
+<div class="card">
+<h3>&#128204; Poster QR (Registration)</h3>
+<ul>
+<li>ONE QR code, same for everyone</li>
+<li>Printed on posters at church entrance</li>
+<li>Links to the Google Form</li>
+<li>For NEW members to register themselves</li>
+<li>Used only once per person</li>
+</ul>
+</div>
+<div class="card">
+<h3>&#128100; Personal QR (Check-In)</h3>
+<ul>
+<li>UNIQUE per member</li>
+<li>Generated after registration</li>
+<li>Automatically sent to member's email upon registration</li>
+<li>Member saves it on their phone</li>
+<li>Shows it every Sunday for check-in</li>
+<li>Usher scans it = instant attendance</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- SETUP -->
+<div class="section" id="setup">
+<div class="section-title"><div class="icon">&#9881;</div> Usher Setup</div>
+<p class="section-desc">How to get FlockTrack running on your device (for ushers).</p>
+
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<h4>Fill the Registration Form</h4>
+<p>Register as a member: <a href="https://forms.gle/GcRUYdp43MY4rw9AA" target="_blank">Click here</a></p>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<h4>Open the App</h4>
+<p>Go to <code>https://morkmork26.github.io/JILGM-Attendance/</code> in Chrome (Android) or Safari (iPhone)</p>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<h4>Install It</h4>
+<p><strong>Android:</strong> Chrome menu > "Add to Home Screen"<br><strong>iPhone:</strong> Share button > "Add to Home Screen"</p>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<h4>Enter Backend URL</h4>
+<p>Go to Settings > Connection and paste this URL:<br><code style="word-break:break-all;font-size:12px"><YOUR_APPS_SCRIPT_URL></code></p>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">5</div>
+<div class="step-content">
+<h4>Wait for Approval</h4>
+<p>Admin approves your device in the Devices sheet. Once approved, you can start using the app.</p>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">6</div>
+<div class="step-content">
+<h4>Start Checking In</h4>
+<p>Choose QR Scan, Quick Tap, or Search mode. Check in members every Sunday!</p>
+</div>
+</div>
+
+<div class="note-box">
+<p><strong>Offline:</strong> No internet? The app still works. Check-ins save locally and sync automatically when you're back online.</p>
+</div>
+</div>
+
+<!-- TABS -->
+<div class="section" id="tabs">
+<div class="section-title"><div class="icon">&#128196;</div> App Tabs</div>
+<div class="grid-2">
+<div class="card">
+<h3>&#9745; Check-In</h3>
+<ul>
+<li><strong>QR Scan</strong> - Camera scans member QR</li>
+<li><strong>Quick Tap</strong> - Tap photo to check in (green ring = done)</li>
+<li><strong>Search</strong> - Type name to find member</li>
+<li>Counter shows checked-in / total</li>
+</ul>
+</div>
+<div class="card">
+<h3>&#128101; Members</h3>
+<ul>
+<li>Browse and search all members</li>
+<li>Filter by Ministry or Outreach</li>
+<li>Tap member to view profile and history</li>
+<li>+ button to add new members</li>
+</ul>
+</div>
+<div class="card">
+<h3>&#128202; Reports</h3>
+<ul>
+<li>Today's count, weekly trends</li>
+<li>Ministry breakdown chart</li>
+<li>Follow-up list (absent 2+ weeks)</li>
+
+<li>Email report button</li>
+</ul>
+</div>
+<div class="card">
+<h3>&#9881; Settings</h3>
+<ul>
+<li>Dark/Light mode</li>
+<li>Backend URL configuration</li>
+<li>Manual sync</li>
+<li>Export data as CSV</li>
+<li>Manage ministries and occasions</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- FAQ -->
+<div class="section" id="faq">
+<div class="section-title"><div class="icon">&#10067;</div> FAQ</div>
+<div class="card">
+<h3>Can it work without internet?</h3>
+<p>Yes. Check-ins save locally and sync when you reconnect.</p>
+</div>
+<div class="card">
+<h3>What's the difference between the two QR codes?</h3>
+<p><strong>Poster QR</strong> = for registration (one QR, everyone scans it to sign up).<br><strong>Personal QR</strong> = for check-in (unique per member, scanned every Sunday).</p>
+</div>
+<div class="card">
+<h3>How do members get their personal QR?</h3>
+<p>After they register, their personal QR code is automatically sent to the email address they provided. They save it on their phone and show it each Sunday.</p>
+</div>
+<div class="card">
+<h3>What if someone registers twice?</h3>
+<p>The system catches it. Duplicate entries go to a "Review" sheet instead. Admin checks and decides.</p>
+</div>
+<div class="card">
+<h3>What if QR scanner doesn't work?</h3>
+<p>Allow camera permission. Or just use Quick Tap or Search mode instead.</p>
+</div>
+<div class="card">
+<h3>How many ushers can use it?</h3>
+<p>Unlimited. Multiple ushers can check in members at the same time from different devices.</p>
+</div>
+<div class="card">
+<h3>Is there a backup?</h3>
+<p>Yes. The system automatically backs up all data to a separate spreadsheet on the 1st of every month. No action needed.</p>
+</div>
+
+</div>
+
+</div>
+
+<div class="footer">
+<p>FlockTrack v1.2.0 - JILGM Sto. Tomas Batangas<br>
+<a href="https://github.com/morkmork26/JILGM-Attendance">github.com/morkmork26/JILGM-Attendance</a></p>
+</div>
+
+</body>
+</html>
