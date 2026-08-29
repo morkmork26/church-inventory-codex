@@ -1,12 +1,29 @@
 # Get Pic — Screenshot Analysis Skill
 
-Quickly view and analyze the most recent screenshot(s) from a configured directory.
+Quickly view and analyze the most recent screenshot(s) from the user's screenshot directory.
 
-## Setup
-Set the screenshots directory for your environment:
-```bash
-export SCREENSHOTS_DIR="./screenshots"  # or wherever screenshots land
-```
+## First-Time Setup (do this once)
+
+Codex does not know where screenshots are stored. On first `sc` trigger:
+
+1. **Auto-detect the screenshot directory.** Run these checks in order and use the first that exists and contains image files:
+   - `~/Pictures/Screenshots/`
+   - `~/OneDrive/Pictures/Screenshots/`
+   - `~/Desktop/Screenshots/`
+   - `~/Downloads/` (filter to .png/.jpg only)
+   - On Windows: `%USERPROFILE%\Pictures\Screenshots\`
+   - On Windows with OneDrive: `%USERPROFILE%\OneDrive\Pictures\Screenshots\`
+   - On Mac: `~/Desktop/` (macOS saves screenshots to Desktop by default)
+
+2. **If none found**, run:
+   ```bash
+   find ~ -maxdepth 4 -type d -iname "screenshots" 2>/dev/null | head -5
+   ```
+   Pick the one with the most recent .png/.jpg files.
+
+3. **If still nothing**, ask the user: "Where does your system save screenshots? I'll remember it."
+
+4. **Save the discovered path** in a project-level config (e.g., `.codex/settings.json` or a comment in AGENTS.md) so you never ask again.
 
 ## Triggers
 - `sc` — view and analyze the most recent screenshot
